@@ -1,0 +1,11 @@
+{
+  "@context": {
+    "farm": "http://example.com/farm/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+
+    "barn": {"@id": "farm:barn", "@type": "@id"},
+    "name": {"@id": "farm:name"},
+    "weight": {"@id": "farm:weight"},    
+    "calves": {"@id": "farm:calves", "@container": "@set"}
+  }
+}
