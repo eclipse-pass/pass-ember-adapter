@@ -51,7 +51,7 @@ module.exports = function(environment) {
   ENV.test = {
     host: 'http://localhost:8080',
     namespace: 'rest/farm',
-    contextURI: 'http://localhost:4200/farm.jsonld',
+    context: 'http://localhost:4200/farm.jsonld',
     username: 'admin',
     password: 'admin',
     integration: true
@@ -78,7 +78,7 @@ module.exports = function(environment) {
   }
 
   if (process.env.FEDORA_ADAPTER_INTEGRATION_TEST) {
-    ENV.test.integration = process.env.FEDORA_ADAPTER_INTEGRATION_TEST;
+    ENV.test.integration = process.env.FEDORA_ADAPTER_INTEGRATION_TEST != '0';
   }
 
   return ENV;
