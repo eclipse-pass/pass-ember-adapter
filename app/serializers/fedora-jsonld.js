@@ -5,9 +5,10 @@ import { classify } from '@ember/string';
 
 // Assumes compact JSON-LD representation without server triples.
 
-// contextURI: Location of external context for JSON-LD.
-// dataURI: URI used for JSON-LD properties.
-// dataPrefix: Default prefix used when referencing dataURI.
+// Required properties:
+//   contextURI: Location of external context for JSON-LD.
+//   dataURI: URI used for JSON-LD properties.
+//   dataPrefix: Default prefix used when referencing dataURI.
 
 export default DS.Serializer.extend({
   // Return prefix used for contextURI in given context or undefined if not found.
@@ -55,10 +56,12 @@ export default DS.Serializer.extend({
     if ('@graph' in payload) {
       // List of objects in graph, return all nodes of the expected type
 
+      // TODO Do not need this if context setup to define types?
       let prefix = this._find_prefix(payload['@context'], this.get('dataURI'));
 
       if (!prefix) {
-        throw 'Cannot find prefix for ' + this.get('dataURI');
+        // TODO
+        // throw 'Cannot find prefix for ' + this.get('dataURI');
       }
 
       let rdftype = this.convertModelNametoRdf(prefix, primaryModelClass.modelName);
@@ -80,6 +83,77 @@ export default DS.Serializer.extend({
       return {
         data: []
       };
+    }
+  },
+
+  // TODO Allow custom transforms?
+
+  _convert_attr_to_json_ld(value, attr_type) {
+    let value_type = typeof value;
+
+    switch (attr_type) {
+      case 'string':
+        if (value_type != 'string') {
+            throw 'Value type' + value_type + ' not compatible with attribute type ' + attr_type;
+        }
+
+        return value;
+      case 'number':
+        if (value_type != 'number') {
+            throw 'Value type' + value_type + ' not compatible with attribute type ' + attr_type;
+        }
+
+        return value;
+      case 'boolean':
+        if (value_type != 'boolean') {
+            throw 'Value type' + value_type + ' not compatible with attribute type ' + attr_type;
+        }
+
+        return value;
+      case 'date':
+        if (!(value instanceof Date)) {
+            throw 'Value not compatible with attribute type ' + attr_type;
+        }
+
+        return value.toISOString();
+      case 'object':
+        throw 'Object attributes are not supported.';
+      default:
+        throw 'Attribute type unsupported: ' + attr_type;
+    }
+  },
+
+  // TODO Handle JSON-LD typed values? Does compaction remove need?
+
+  _convert_json_ld_to_attr(value, attr_type) {
+    let value_type = typeof value;
+
+    switch (attr_type) {
+      case 'string':
+        if (value_type != 'string') {
+            throw 'Value type' + value_type + ' not compatible with attribute type ' + attr_type;
+        }
+
+        return value;
+      case 'number':
+        if (value_type != 'number') {
+            throw 'Value type' + value_type + ' not compatible with attribute type ' + attr_type;
+        }
+
+        return value;
+      case 'boolean':
+        if (value_type != 'boolean') {
+            throw 'Value type' + value_type + ' not compatible with attribute type ' + attr_type;
+        }
+
+        return value;
+      case 'date':
+        // TODO Older browsers may not handle ISOString format.
+        return Date.parse(value);
+      case 'object':
+        throw 'Object attributes are not supported.';
+      default:
+        throw 'Attribute type unsupported: ' + attr_type;
     }
   },
 
@@ -109,17 +183,19 @@ export default DS.Serializer.extend({
       jsonld['@id'] = '';
     }
 
-    jsonld['@type'] = this.convertModelNametoRdf(this.get('dataPrefix'), snapshot.type.modelName);
+    // TODO Can we require the type to be defined in the context thus getting rid of prefix?
 
-    // TODO Handle type conversion
+    jsonld['@type'] = this.convertModelNametoRdf(this.get('dataPrefix'), snapshot.type.modelName);
 
     snapshot.eachAttribute((key, attribute) => {
       let value = snapshot.attr(key);
 
-      if (value != undefined) {
-        jsonld[key] = value;
+      if (value != undefined && value != null) {
+        jsonld[key] = this._convert_attr_to_json_ld(value, attribute.type);
       }
     });
+
+    // TODO handle ids and id arrays
 
     snapshot.eachRelationship((key, relationship) => {
       if (relationship.kind === 'belongsTo') {
@@ -149,6 +225,7 @@ export default DS.Serializer.extend({
   */
   normalize(typeClass, hash) {
     //console.log('normalize')
+    //console.log(hash);
 
     let id = hash['@id'];
     let type = typeClass.modelName;
@@ -162,12 +239,7 @@ export default DS.Serializer.extend({
 
     typeClass.eachAttribute((key, attribute) => {
       if (key in hash) {
-        if (attribute.type === 'date') {
-          // TODO wrong, simple hack for now
-          attrs[key] = new Date(hash[key]);
-        } else {
-          attrs[key] = hash[key];
-        }
+        attrs[key] = this._convert_json_ld_to_attr(hash[key], attribute.type);
       }
     });
 

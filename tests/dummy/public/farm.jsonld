@@ -3,9 +3,12 @@
     "farm": "http://example.com/farm/",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
 
-    "barn": {"@id": "farm:barn", "@type": "@id"},
-    "name": {"@id": "farm:name"},
-    "weight": {"@id": "farm:weight"},    
+    "healthy": {"@id": "farm:healthy", "@type": "xsd:boolean"},
+    "birthDate": {"@id": "farm:birthDate", "@type": "xsd:dateTime"},
+    "name": {"@id": "farm:name", "@type": "xsd:string"},
+    "milkVolume": {"@id": "farm:milkVolume", "@type": "xsd:double"},    
+    "weight": {"@id": "farm:weight", "@type": "xsd:integer"},
+    "barn": {"@id": "farm:barn", "@type": "@id"},    
     "calves": {"@id": "farm:calves", "@container": "@set"}
   }
 }

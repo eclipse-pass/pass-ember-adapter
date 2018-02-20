@@ -70,6 +70,7 @@ export default DS.Adapter.extend({
         // Return JSON-LD object for serializer.normalizeResponse.
 
         data['@id'] = resp.trim();
+
         return data;
       }
     });

@@ -10,12 +10,15 @@ import ENV from 'dummy/config/environment';
 module('Unit | Serializer | fedora-jsonld', function(hooks) {
   setupTest(hooks);
 
-  test('it serializes simple record as JSON-LD', function(assert) {
+  test('it serializes simple cow as JSON-LD', function(assert) {
     let store = this.owner.lookup('service:store');
 
     let data = {
       name: 'bessie',
-      weight: 47
+      weight: 470,
+      healthy: true,
+      milkVolume: 10.5,
+      birthDate: new Date(Date.UTC(96, 11, 1, 0, 0, 0))
     };
 
     let record = run(() => store.createRecord('cow', data));
@@ -25,7 +28,10 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
       '@id': '',
       '@type': 'farm:Cow',
       name: data.name,
-      weight: data.weight
+      weight: data.weight,
+      healthy: data.healthy,
+      milkVolume: data.milkVolume,
+      birthDate: data.birthDate.toISOString()
     };
 
     let result = record.serialize();
