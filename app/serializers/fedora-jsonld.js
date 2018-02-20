@@ -149,7 +149,7 @@ export default DS.Serializer.extend({
         return value;
       case 'date':
         // TODO Older browsers may not handle ISOString format.
-        return Date.parse(value);
+        return new Date(Date.parse(value));
       case 'object':
         throw 'Object attributes are not supported.';
       default:
@@ -224,8 +224,8 @@ export default DS.Serializer.extend({
     @return {Object}
   */
   normalize(typeClass, hash) {
-    //console.log('normalize')
-    //console.log(hash);
+    console.log('normalize')
+    console.log(hash);
 
     let id = hash['@id'];
     let type = typeClass.modelName;
@@ -242,6 +242,8 @@ export default DS.Serializer.extend({
         attrs[key] = this._convert_json_ld_to_attr(hash[key], attribute.type);
       }
     });
+
+    console.log(attrs);
 
     return {
         id:         id,

@@ -79,7 +79,16 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
       let record = store.createRecord('cow', data);
       assert.ok(record);
 
-      return record.save().then(() => assert.step('save'));
+      return record.save().then(() => {
+        assert.step('save')
+
+        assert.equal(data.name, record.get('name'));
+        assert.equal(data.weight, record.get('weight'));
+        assert.equal(data.healthy, record.get('healthy'));
+        assert.equal(data.milkVolume, record.get('milkVolume'));
+        assert.equal(data.birthDate, record.get('birthDate'));
+      });
+
     }).then(() => assert.verifySteps(['post', 'save']));
   });
 });
