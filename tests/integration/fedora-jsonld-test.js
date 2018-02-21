@@ -6,8 +6,7 @@ import ENV from 'dummy/config/environment';
 // Test the Fedora JSON-LD adapter hitting a live Fedora instance
 
 // TODO Add support to adapter for setting up type support in Fedora.
-// TODO Try to serve context out of ember server to simplify integration setup?
-
+// and cleaning up for each test?
 
 // Skip unless integration tests are turned on.
 function integrationTest(name, stuff) {
@@ -21,8 +20,13 @@ function integrationTest(name, stuff) {
 module('Integration | Adapter | fedora jsonld', function(hooks) {
   setupApplicationTest(hooks);
 
+  hooks.beforeEach(function() {
+    let adapter = this.owner.lookup('adapter:application');
 
-  skip('findAll on empty type', function(assert) {
+    return adapter.setupFedora(['cow']);
+  });
+
+  integrationTest('findAll on empty type', function(assert) {
     let store = this.owner.lookup('service:store');
 
     let cows = run(() => store.findAll('cow'));
@@ -42,7 +46,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       birthDate: new Date(Date.UTC(80, 11, 1, 0, 0, 0))
     };
 
-    run(() => {
+    let result = run(() => {
       let record = store.createRecord('cow', data);
       assert.ok(record);
 
@@ -67,7 +71,12 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
           assert.equal(data.birthDate, cow.get('birthDate'));
         });
       });
-    }).then(() => assert.verifySteps(['save', 'findRecord']));
+    });
 
+    return result.then(() => {
+      assert.verifySteps(['save', 'findRecord'])
+    }, (error) => {
+      assert.ok(false, 'Error in runloop: ' + JSON.stringify(error));
+    });
   });
 });

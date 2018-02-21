@@ -51,7 +51,7 @@ module.exports = function(environment) {
   ENV.test = {
     host: 'http://localhost:8080',
     namespace: 'rest/farm',
-    context: 'http://localhost:4200/farm.jsonld',
+    context: 'http://localhost/farm.jsonld',
     username: 'admin',
     password: 'admin',
     integration: true
