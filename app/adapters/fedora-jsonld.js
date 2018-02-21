@@ -5,6 +5,10 @@ import { camelize } from '@ember/string';
 import { get } from '@ember/object';
 import { pluralize } from 'ember-inflector';
 
+// TODO constants for standard accept prefer headers or auto add
+// TODO Error handling
+// TODO Logging
+// TODO look at username and password options for ajax.
 
 export default DS.Adapter.extend({
   username: null,
@@ -41,15 +45,32 @@ export default DS.Adapter.extend({
     return $.ajax(options);
   },
 
-  /**
-    Called by the store when a newly created record is
-    saved via the `save` method on a model record instance.
-    The `createRecord` method serializes the record and makes an Ajax (HTTP POST) request
-    to a URL computed by `buildURL`.
-    See `serialize` for information on how to customize the serialized form
-    of a record.
+  // Return a Promise which delete an object and its tombstone from Fedora.
+  // Does not fail if delete fails.
+  _delete(url) {
+    return this._ajax(url, 'DELETE').then(() => this._ajax(url + '/fcr:tombstone', 'DELETE'), () => {});
+  },
 
-    The returned Promise should on success resolve to JSON with an id.
+  // Return a Promise which creates an empty container in Fedora.
+  _create(url) {
+    return this._ajax(url, 'PUT', {headers: {'Content-Type': 'text/turtle'}});
+  },
+
+  // Return a Promise which deletes the root container used by the adapter if it
+  // exists, recreates the root container, and then creates type containers.
+  setupFedora(modelNames) {
+    let base = this.buildURL();
+    let result = this._delete(base).then(() => this._create(base));
+
+    return result.then(() => RSVP.all(modelNames.map(name => this._create(this.buildURL(name)))));
+  },
+
+  /**
+    Persists a record to Fedora. Uses serializer.serialize to turn the record into
+    JSON-LD.
+
+    The returned Promise should resolve to the created JSON-LD object
+    with @id set so it is ready for serializer.normalizeResponse.
 
     @method createRecord
     @param {DS.Store} store
@@ -59,7 +80,7 @@ export default DS.Adapter.extend({
   */
   createRecord(store, type, snapshot) {
     let serializer = store.serializerFor(type.modelName);
-    let url = this.buildModelURL(type.modelName);
+    let url = this.buildURL(type.modelName);
     let data = serializer.serialize(snapshot);
 
     return this._ajax(url, "POST", {
@@ -146,9 +167,10 @@ export default DS.Adapter.extend({
     @return {Promise} promise
   */
   findAll(store, type, sinceToken, snapshotRecordArray) {
-    let url = this.buildModelURL(type.modelName);
+    let url = this.buildURL(type.modelName);
     let query = {};
 
+    // TODO Investigate query
     //console.log('findAll ' + url);
 
     return this._ajax(url, 'GET', {
@@ -178,8 +200,9 @@ export default DS.Adapter.extend({
     @return {Promise} promise
   */
   query(store, type, query) {
-    let url = this.buildModelURL(type.modelName);
+    let url = this.buildURL(type.modelName);
 
+    // TODO Fake here with filtering? Throw exception?
     return this._ajax(url, 'GET', {
       data: query,
       headers: {
@@ -189,38 +212,17 @@ export default DS.Adapter.extend({
     });
   },
 
-  // Code to build URL adapted from BuildURLMixin
-  // TODO All of this is much too complex, should be refactored.
-
-  buildModelURL(modelName) {
-    let path;
-    let url = [];
-    let prefix = this.urlPrefix();
-
-    path = this.pathForType(modelName);
-
-    if (path) {
-      url.push(path);
-    }
-
-    if (prefix) {
-      url.unshift(prefix);
-    }
-
-    url = url.join('/');
-    if (!this.host && url && url.charAt(0) !== '/') {
-      url = '/' + url;
-    }
-
-    return url;
-  },
-
-  pathForType(modelName) {
+  // Return the path relative to the adapter root in the Fedora repository
+  // for the container holding all instances of a type.
+  buildModelPath(modelName) {
     let camelized = camelize(modelName);
     return pluralize(camelized);
   },
 
-  urlPrefix(path, parentURL) {
+  // Return the path to the root container in a Fedora container which will hold all data
+  // managed by the adapter.
+  buildURL(modelName = null) {
+    // TODO Use this.get??
     let host = get(this, 'host');
     let namespace = get(this, 'namespace');
 
@@ -228,25 +230,20 @@ export default DS.Adapter.extend({
       host = '';
     }
 
-    if (path) {
-      // Protocol relative url
-      if (/^\/\//.test(path) || /http(s)?:\/\//.test(path)) {
-        // Do nothing, the full host is already included.
-        return path;
+    let url = [];
 
-      // Absolute path
-      } else if (path.charAt(0) === '/') {
-        return `${host}${path}`;
-      // Relative path
-      } else {
-        return `${parentURL}/${path}`;
-      }
+    if (host) {
+      url.push(host);
     }
 
-    // No path provided
-    let url = [];
-    if (host) { url.push(host); }
-    if (namespace) { url.push(namespace); }
+    if (namespace) {
+      url.push(namespace);
+    }
+
+    if (modelName) {
+      url.push(this.buildModelPath(modelName));
+    }
+
     return url.join('/');
   },
 });

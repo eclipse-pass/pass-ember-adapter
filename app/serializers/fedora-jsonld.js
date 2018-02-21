@@ -224,8 +224,8 @@ export default DS.Serializer.extend({
     @return {Object}
   */
   normalize(typeClass, hash) {
-    console.log('normalize')
-    console.log(hash);
+    //console.log('normalize')
+    //console.log(hash);
 
     let id = hash['@id'];
     let type = typeClass.modelName;
@@ -243,7 +243,7 @@ export default DS.Serializer.extend({
       }
     });
 
-    console.log(attrs);
+    //console.log(attrs);
 
     return {
         id:         id,
