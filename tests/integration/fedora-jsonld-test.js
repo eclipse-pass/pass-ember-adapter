@@ -26,7 +26,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
     return adapter.setupFedora(['cow']);
   });
 
-  skip('findAll on empty type', function(assert) {
+  integrationTest('findAll on empty type', function(assert) {
     let store = this.owner.lookup('service:store');
 
     let cows = run(() => store.findAll('cow'));
