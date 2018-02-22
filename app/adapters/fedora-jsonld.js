@@ -2,7 +2,6 @@ import DS from 'ember-data';
 import RSVP from 'rsvp';
 import $ from 'jquery';
 import { camelize } from '@ember/string';
-import { get } from '@ember/object';
 import { pluralize } from 'ember-inflector';
 
 // TODO constants for standard accept prefer headers or auto add
@@ -223,9 +222,8 @@ export default DS.Adapter.extend({
   // Return the path to the root container in a Fedora container which will hold all data
   // managed by the adapter.
   buildURL(modelName = null) {
-    // TODO Use this.get??
-    let host = get(this, 'host');
-    let namespace = get(this, 'namespace');
+    let host = this.get('host');
+    let namespace = this.get('namespace');
 
     if (!host || host === '/') {
       host = '';
