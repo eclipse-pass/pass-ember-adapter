@@ -46,9 +46,10 @@ export default DS.Adapter.extend({
   },
 
   // Return a Promise which delete an object and its tombstone from Fedora.
-  // Does not fail if delete fails.
+  // Always tries to delete tombstone as well and never fails.
   _delete(url) {
-    return this._ajax(url, 'DELETE').then(() => this._ajax(url + '/fcr:tombstone', 'DELETE'), () => {});
+    let deltomb = () => this._ajax(url + '/fcr:tombstone', 'DELETE').catch(() => {});
+    return this._ajax(url, 'DELETE').then(deltomb, deltomb);
   },
 
   // Return a Promise which creates an empty container in Fedora.

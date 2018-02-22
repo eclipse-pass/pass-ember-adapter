@@ -6,6 +6,5 @@ export default FedoraJsonLdSerializer.extend({
   init() {
     this.set('contextURI',  ENV.test.override ? ENV.test.override.context : ENV.test.context);
     this.set('dataURI', 'http://example.com/farm/');
-    this.set('dataPrefix', 'farm');
   }
 });

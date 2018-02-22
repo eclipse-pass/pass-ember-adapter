@@ -26,7 +26,7 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
     let expected = {
       '@context': ENV.test.context,
       '@id': '',
-      '@type': 'farm:Cow',
+      '@type': 'Cow',
       name: data.name,
       weight: data.weight,
       healthy: data.healthy,
@@ -46,7 +46,7 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
     let expected = {
       '@context': ENV.test.context,
       '@id': '',
-      '@type': 'farm:Cow'
+      '@type': 'Cow'
     };
 
     let result = record.serialize();

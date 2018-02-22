@@ -8,13 +8,8 @@ import { classify } from '@ember/string';
 // Required properties:
 //   contextURI: Location of external context for JSON-LD.
 //   dataURI: URI used for JSON-LD properties.
-//   dataPrefix: Default prefix used when referencing dataURI.
 
 export default DS.Serializer.extend({
-  // Return prefix used for contextURI in given context or undefined if not found.
-  _find_prefix(context, uri) {
-    return Object.keys(context).find(key => context[key] === uri);
-  },
 
   // TODO Add mechanism to specify id <-> fedora uri mapping
   // Make default prettier. Perhaps just remove base uri, maybe base64 encode?
@@ -26,12 +21,20 @@ export default DS.Serializer.extend({
     return id;
   },
 
-  convertModelNametoRdf(prefix, modelName) {
-      return prefix + ':' + classify(modelName);
+  // Return the JSON-LD type to be used for a model
+  serializeModelName(modelName) {
+      return classify(modelName);
   },
 
-  convertModelAttributeToRdf(modelName, attrName) {
-    return attrName;
+  // Return the JSON-LD property name to be used for the given attribute of a model.
+  // The context must set the type of this property to be consistent with the model.
+  serializeKey(modelName, attr) {
+    return attr;
+  },
+
+  // Return the model attribute name of a JSON-LD property.
+  normalizeKey(modelName, prop) {
+    return prop;
   },
 
   /**
@@ -56,18 +59,10 @@ export default DS.Serializer.extend({
     if ('@graph' in payload) {
       // List of objects in graph, return all nodes of the expected type
 
-      // TODO Do not need this if context setup to define types?
-      let prefix = this._find_prefix(payload['@context'], this.get('dataURI'));
-
-      if (!prefix) {
-        // TODO
-        // throw 'Cannot find prefix for ' + this.get('dataURI');
-      }
-
-      let rdftype = this.convertModelNametoRdf(prefix, primaryModelClass.modelName);
+      let type = this.serializeModelName(primaryModelClass.modelName);
 
       return {
-        data: payload['@graph'].filter(n => '@type' in n && n['@type'].includes(rdftype)).map(n =>
+        data: payload['@graph'].filter(n => '@type' in n && n['@type'].includes(type)).map(n =>
           this.normalize(primaryModelClass, n)
         )
       };
@@ -88,7 +83,8 @@ export default DS.Serializer.extend({
 
   // TODO Allow custom transforms?
 
-  _convert_attr_to_json_ld(value, attr_type) {
+  // Convert a model attribute value to a JSON-LD value
+  _serialize_attr(value, attr_type) {
     let value_type = typeof value;
 
     switch (attr_type) {
@@ -123,9 +119,9 @@ export default DS.Serializer.extend({
     }
   },
 
+  // Convert a JSON-LD property to a model attribute value
   // TODO Handle JSON-LD typed values? Does compaction remove need?
-
-  _convert_json_ld_to_attr(value, attr_type) {
+  _normalize_attr(value, attr_type) {
     let value_type = typeof value;
 
     switch (attr_type) {
@@ -183,15 +179,16 @@ export default DS.Serializer.extend({
       jsonld['@id'] = '';
     }
 
-    // TODO Can we require the type to be defined in the context thus getting rid of prefix?
-
-    jsonld['@type'] = this.convertModelNametoRdf(this.get('dataPrefix'), snapshot.type.modelName);
+    let type = snapshot.type.modelName;
+    jsonld['@type'] = this.serializeModelName(type);
 
     snapshot.eachAttribute((key, attribute) => {
       let value = snapshot.attr(key);
 
       if (value != undefined && value != null) {
-        jsonld[key] = this._convert_attr_to_json_ld(value, attribute.type);
+        let name = this.serializeKey(type, key);
+
+        jsonld[name] = this._serialize_attr(value, attribute.type);
       }
     });
 
@@ -210,13 +207,9 @@ export default DS.Serializer.extend({
      return jsonld;
   },
  /**
-    The `normalize` method is used to convert a payload received from your
-    external data source into the normalized form `store.push()` expects. You
-    should override this method, munge the hash and return the normalized
-    payload.
-
-    Assume that JSON-LD has been compacted and only statments in the ember data
-    context are being returned.
+    Normalize JSON-LD. Assume that JSON-LD has been compacted and terms
+    are in the dataURI namespace. Compact IRIs are checked to see if they are
+    in the dataURI namespace. Full IRIs are not supported.
 
     @method normalize
     @param {DS.Model} typeClass
@@ -231,15 +224,29 @@ export default DS.Serializer.extend({
     let type = typeClass.modelName;
     let attrs = {};
 
-    // TODO Handle type conversion
-    // TODO Support mapping ember attribute <-> fedora property
-    // TODO Ensure each key is from dataURI property.
+    // Find prefix for dataURI
+    let context = hash['@context'];
+    let data_prefix = Object.keys(context).find(key => context[key] === this.get('dataURI'));
 
-    // Gather model attributes from the JSON-LD.
+    // Compact IRIs of dataURI are turned into terms.
+    for (const [key, value] of Object.entries(hash)) {
+      let i = key.indexOf(':');
+
+      if (i != -1) {
+        let prefix = key.substring(0, i);
+        let newkey = key.substring(i + 1);
+
+        if (prefix === data_prefix) {
+          hash[newkey] = hash[key];
+        }
+      }
+    }
+
+    // Add all attributes of the model found in the hash
 
     typeClass.eachAttribute((key, attribute) => {
       if (key in hash) {
-        attrs[key] = this._convert_json_ld_to_attr(hash[key], attribute.type);
+        attrs[key] = this._normalize_attr(hash[key], attribute.type);
       }
     });
 
