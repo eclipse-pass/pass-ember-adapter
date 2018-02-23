@@ -5,5 +5,6 @@ export default DS.Model.extend({
   weight: DS.attr('number'),
   healthy: DS.attr('boolean'),
   birthDate: DS.attr('date'),
-  milkVolume: DS.attr('number')
+  milkVolume: DS.attr('number'),
+  barn: DS.belongsTo('barn')
 });

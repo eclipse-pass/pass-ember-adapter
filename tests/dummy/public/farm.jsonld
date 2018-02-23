@@ -4,6 +4,7 @@
     "xsd": "http://www.w3.org/2001/XMLSchema#",
 
     "Cow": "farm:Cow",
+    "Barn": "farm:Barn",    
 
     "healthy": {"@id": "farm:healthy", "@type": "xsd:boolean"},
     "birthDate": {"@id": "farm:birthDate", "@type": "xsd:dateTime"},
@@ -11,6 +12,6 @@
     "milkVolume": {"@id": "farm:milkVolume", "@type": "xsd:double"},    
     "weight": {"@id": "farm:weight", "@type": "xsd:integer"},
     "barn": {"@id": "farm:barn", "@type": "@id"},    
-    "calves": {"@id": "farm:calves", "@container": "@set"}
+    "cows": {"@id": "farm:cows", "@container": "@set"}    
   }
 }

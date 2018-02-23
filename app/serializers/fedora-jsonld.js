@@ -1,6 +1,7 @@
 import DS from 'ember-data';
 import { classify } from '@ember/string';
 
+// TODO Figure out how to disable for certain functions.
 /* eslint no-unused-vars: 0 */
 
 // Assumes compact JSON-LD representation without server triples.
@@ -192,13 +193,23 @@ export default DS.Serializer.extend({
       }
     });
 
-    // TODO handle ids and id arrays
+    // TODO Investigate what works nicely for JSON-LD. Use typed values?
 
     snapshot.eachRelationship((key, relationship) => {
+      let name = this.serializeKey(type, key);
+
       if (relationship.kind === 'belongsTo') {
-        jsonld[key] = snapshot.belongsTo(key, { id: true });
+        let id = snapshot.belongsTo(key, { id: true });
+
+        if (id) {
+          jsonld[name] = id;
+        }
       } else if (relationship.kind === 'hasMany') {
-        jsonld[key] = snapshot.hasMany(key, { ids: true });
+        let ids = snapshot.hasMany(key, { ids: true });
+
+        if (ids) {
+          jsonld[name] = ids;
+        }
       }
      });
 
@@ -223,6 +234,7 @@ export default DS.Serializer.extend({
     let id = hash['@id'];
     let type = typeClass.modelName;
     let attrs = {};
+    let rels = {};
 
     // Find prefix for dataURI
     let context = hash['@context'];
@@ -245,17 +257,39 @@ export default DS.Serializer.extend({
     // Add all attributes of the model found in the hash
 
     typeClass.eachAttribute((key, attribute) => {
-      if (key in hash) {
-        attrs[key] = this._normalize_attr(hash[key], attribute.type);
+      let hashkey = this.serializeKey(type, key);
+
+      if (hashkey in hash) {
+        attrs[key] = this._normalize_attr(hash[hashkey], attribute.type);
+      }
+    });
+
+    // Add all relationships found in the hash
+
+    typeClass.eachRelationship((key, relationship) => {
+      let hashkey = this.serializeKey(type, key);
+
+      if (hashkey in hash) {
+        let rel_id = hash[hashkey];
+        let rel_type = relationship.type;
+
+        if (relationship.kind === 'belongsTo') {
+          rels[key] = {data: {id: rel_id, type: rel_type}};
+        } else if (relationship.kind === 'hasMany') {
+          // TODO Handle array
+          rels[key] = {data: [{id: rel_id, type: rel_type}]};
+        }
       }
     });
 
     //console.log(attrs);
+    //console.log(rels);
 
     return {
-        id:         id,
-        type:       type,
-        attributes: attrs
+        id:            id,
+        type:          type,
+        attributes:    attrs,
+        relationships: rels
     };
   }
 });

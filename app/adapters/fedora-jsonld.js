@@ -7,7 +7,6 @@ import { pluralize } from 'ember-inflector';
 // TODO constants for standard accept prefer headers or auto add
 // TODO Error handling
 // TODO Logging
-// TODO look at username and password options for ajax.
 
 export default DS.Adapter.extend({
   username: null,
