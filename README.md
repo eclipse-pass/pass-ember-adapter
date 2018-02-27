@@ -2,7 +2,75 @@
 
 ## Introduction
 
-This addon provides an adapter for interacting with the Fedora repository, [http://fedorarepository.org/].
+This addon provides an adapter for interacting with the Fedora repository, http://fedorarepository.org/.
+
+## Using the Fedora adapter
+
+The Fedora adapter requires a JSON-LD context corresponding to the models of the Ember application.
+Each model must be defined as a term in the context. By default, the context term must be the upper case camel form of the model name.
+For example the 'cow' ember model would be a 'Cow' term in the context. Properties of a model must also be declared in the context along with a type.
+The context must be consistent with the models.
+
+
+| Ember type    | JSON-LD type             |
+| ------------- | -------------            |
+| boolean       | xsd:boolean              |
+| number        | xsd:integer, xsd:double  |
+| string        | xsd:string               |
+| date          | xsd:dateTime             |
+| object        | Unsupported              |
+| belongsTo     | @id                      |
+| hasMany       | @container: @set         |
+
+
+
+The context must be publicly available and its location should be set with the 'contextURI' property of the serializer. The actual URI used for all the
+term definitions must be set with 'dataURI' property of the serializer.
+
+
+Example cow model:
+```javascript
+export default DS.Model.extend({
+  name: DS.attr('string'),
+  weight: DS.attr('number'),
+  healthy: DS.attr('boolean'),
+  birthDate: DS.attr('date'),
+  milkVolume: DS.attr('number'),
+  barn: DS.belongsTo('barn')
+});
+```
+
+Example barn model:
+```javascript
+export default DS.Model.extend({
+  name: DS.attr('string'),
+  cows: DS.hasMany('cow')
+});
+
+```
+
+Example JSON-LD context:
+```javascript
+{
+  "@context": {
+    "farm": "http://example.com/farm/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+
+    "Cow": "farm:Cow",
+    "Barn": "farm:Barn",    
+
+    "healthy": {"@id": "farm:healthy", "@type": "xsd:boolean"},
+    "birthDate": {"@id": "farm:birthDate", "@type": "xsd:dateTime"},
+    "name": {"@id": "farm:name", "@type": "xsd:string"},
+    "milkVolume": {"@id": "farm:milkVolume", "@type": "xsd:double"},    
+    "weight": {"@id": "farm:weight", "@type": "xsd:integer"},
+    "barn": {"@id": "farm:barn", "@type": "@id"},    
+    "cows": {"@id": "farm:cows", "@container": "@set"}    
+  }
+}
+
+```
+
 
 ## Installation
 
