@@ -1,11 +1,10 @@
 import DS from 'ember-data';
 import { classify } from '@ember/string';
 
-// TODO Figure out how to disable for certain functions.
+// TODO Figure out how to disable eslint for certain functions.
 /* eslint no-unused-vars: 0 */
 
 // Assumes compact JSON-LD representation without server triples.
-
 // Required properties:
 //   contextURI: Location of external context for JSON-LD.
 //   dataURI: URI used for JSON-LD properties.
@@ -39,10 +38,8 @@ export default DS.Serializer.extend({
   },
 
   /**
-    The `normalizeResponse` method is used to normalize a payload from the
-    server to a JSON-API Document.
-
-    http://jsonapi.org/format/#document-structure
+    Normalize JSON-LD returned in compact form from Fedora into the internal
+    JSON-API based representation used by Ember Data.
 
     @since 1.13.0
     @method normalizeResponse
@@ -193,8 +190,6 @@ export default DS.Serializer.extend({
       }
     });
 
-    // TODO Investigate what works nicely for JSON-LD. Use typed values?
-
     snapshot.eachRelationship((key, relationship) => {
       let name = this.serializeKey(type, key);
 
@@ -202,13 +197,13 @@ export default DS.Serializer.extend({
         let id = snapshot.belongsTo(key, { id: true });
 
         if (id) {
-          jsonld[name] = id;
+          jsonld[name] = {"@id": id};
         }
       } else if (relationship.kind === 'hasMany') {
         let ids = snapshot.hasMany(key, { ids: true });
 
         if (ids) {
-          jsonld[name] = ids;
+          jsonld[name] = ids.map(id => ({"@id": id}));
         }
       }
      });
@@ -218,9 +213,9 @@ export default DS.Serializer.extend({
      return jsonld;
   },
  /**
-    Normalize JSON-LD. Assume that JSON-LD has been compacted and terms
-    are in the dataURI namespace. Compact IRIs are checked to see if they are
-    in the dataURI namespace. Full IRIs are not supported.
+    Normalize JSON-LD to internal representation. Assume that JSON-LD has been
+    compacted and terms are in the dataURI namespace. Compact IRIs are checked
+    to see if they are in the dataURI namespace. Full IRIs are not supported.
 
     @method normalize
     @param {DS.Model} typeClass
@@ -254,7 +249,7 @@ export default DS.Serializer.extend({
       }
     }
 
-    // Add all attributes of the model found in the hash
+    // Get attributes of the model found in the hash
 
     typeClass.eachAttribute((key, attribute) => {
       let hashkey = this.serializeKey(type, key);
@@ -264,20 +259,23 @@ export default DS.Serializer.extend({
       }
     });
 
-    // Add all relationships found in the hash
+    // Get relationships found in the hash
 
     typeClass.eachRelationship((key, relationship) => {
       let hashkey = this.serializeKey(type, key);
 
       if (hashkey in hash) {
-        let rel_id = hash[hashkey];
+        let rel_target = hash[hashkey];
         let rel_type = relationship.type;
 
         if (relationship.kind === 'belongsTo') {
-          rels[key] = {data: {id: rel_id, type: rel_type}};
+          rels[key] = {data: {id: rel_target, type: rel_type}};
         } else if (relationship.kind === 'hasMany') {
-          // TODO Handle array
-          rels[key] = {data: [{id: rel_id, type: rel_type}]};
+          if (Array.isArray(rel_target)) {
+            rels[key] = {data: rel_target.map(t => ({id: t, type: rel_type}))}
+          } else {
+            rels[key] = {data: [{id: rel_target, type: rel_type}]};
+          }
         }
       }
     });

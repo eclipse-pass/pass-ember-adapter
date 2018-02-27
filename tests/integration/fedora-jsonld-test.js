@@ -6,9 +6,6 @@ import ENV from 'dummy/config/environment';
 
 // Test the Fedora JSON-LD adapter hitting a live Fedora instance
 
-// TODO Add support to adapter for setting up type support in Fedora.
-// and cleaning up for each test?
-
 // Skip unless integration tests are turned on.
 function integrationTest(name, stuff) {
     if (ENV.test.integration) {
@@ -17,7 +14,7 @@ function integrationTest(name, stuff) {
       skip(name, stuff);
     }
 }
-
+// TODO try removing xsd:string from context
 module('Integration | Adapter | fedora jsonld', function(hooks) {
   setupApplicationTest(hooks);
 
