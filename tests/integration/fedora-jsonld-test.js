@@ -2,6 +2,7 @@ import { module, test, skip } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
 import { run } from "@ember/runloop";
 import ENV from 'dummy/config/environment';
+import RSVP from 'rsvp';
 
 
 // Test the Fedora JSON-LD adapter hitting a live Fedora instance
@@ -31,6 +32,62 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
 
     assert.ok(cows);
     assert.equal(cows.get('length'), 0);
+  });
+
+  integrationTest('findAll on two barns', function(assert) {
+    let store = this.owner.lookup('service:store');
+
+    let barn1_data = {
+      name: 'Number one'
+    };
+
+    let barn2_data = {
+      name: 'Number two'
+    };
+
+    let barn1_record, barn2_record;
+    let barn1_id, barn2_id;
+
+    let result = run(() => {
+      barn1_record = store.createRecord('barn', barn1_data);
+      assert.ok(barn1_record);
+
+      barn2_record = store.createRecord('barn', barn2_data);
+      assert.ok(barn2_record);
+
+      return RSVP.all([barn1_record.save(), barn2_record.save()]);
+    }).then(() => {
+      assert.step('save');
+
+      barn1_id = barn1_record.get('id');
+      barn2_id = barn2_record.get('id');
+
+      // Clear the cache to make sure we test the retrieved records.
+      store.unloadAll();
+
+      return store.findAll('barn');
+    }).then(result => {
+      assert.step('findAll');
+
+      assert.ok(result);
+      assert.equal(result.get('length'), 2);
+
+      let barn1 = result.find(b => b.get('id') === barn1_id);
+      let barn2 = result.find(b => b.get('id') === barn2_id);
+
+      assert.ok(barn1);
+      assert.ok(barn2);
+
+      assert.equal(barn1.get('id'), barn1_id);
+      assert.equal(barn1.get('name'), barn1_data.name);
+
+      assert.equal(barn2.get('id'), barn2_id);
+      assert.equal(barn2.get('name'), barn2_data.name);
+    });
+
+    return result.then(() => {
+      assert.verifySteps(['save', 'findAll'])
+    });
   });
 
   integrationTest('create a simple cow', function(assert) {
@@ -161,6 +218,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
           let cows = barn.get('cows');
           assert.ok(cows);
           assert.equal(cows.get('length'), 1);
+          assert.equal(cows.get('firstObject.id'), cow_id);
         });
 
     });
