@@ -9,23 +9,26 @@ This addon provides an adapter for interacting with the Fedora repository, http:
 The Fedora adapter requires a JSON-LD context corresponding to the models of the Ember application.
 Each model must be defined as a term in the context. By default, the context term must be the upper case camel form of the model name.
 For example the 'cow' ember model would be a 'Cow' term in the context. Attributes and relationships of a model must also be declared
-in the context as terms with a type. By default an attribute or relationships name maps directly to a term and those names
-must be used consistently in all models.
+in the context as terms. By default an attribute or relationships name maps directly to a term and those names
+must be used consistently in all models. Some terms in the context require a type set, some do not. Whether or not an optional type is specified will
+oddly influence compaction, but will not affect the adapter.
+
 
 Attributes mapping:
-| Ember type | JSON-LD type             |
-| ---------- | -------------            |
-| boolean    | xsd:boolean              |
-| number     | xsd:integer, xsd:double  |
-| string     | xsd:string               |
-| date       | xsd:dateTime             |
-| object     | Unsupported              |
+| Ember type | JSON-LD type             | Required |
+| ---------- | -------------            | -------- |
+| boolean    | xsd:boolean              | false    |
+| number     | xsd:integer, xsd:double  | false    |
+| string     | xsd:string               | false    |
+| date       | xsd:dateTime             | true     | 
+| object     | Unsupported              |          |
 
 Relationship mapping:
-| Ember relationship | JSON-LD type           |
-| ------------------ | ------------           |
-| belongsTo          | @id                    |
-| hasMany            | @container: @set, @id  |
+| Ember relationship | JSON-LD type           | Required | 
+| ------------------ | ------------           | -------- |
+| belongsTo          | @id                    | true     |
+| hasMany            | @container: @set, @id  | true     |
+
 
 The context must be publicly available and its location should be set with the 'contextURI' property of the serializer. The actual URI used for all the
 term definitions must be set with 'dataURI' property of the serializer.
@@ -61,9 +64,9 @@ Example JSON-LD context:
     "Cow": "farm:Cow",
     "Barn": "farm:Barn",    
 
-    "healthy": {"@id": "farm:healthy", "@type": "xsd:boolean"},
+    "healthy": {"@id": "farm:healthy"},
     "birthDate": {"@id": "farm:birthDate", "@type": "xsd:dateTime"},
-    "name": {"@id": "farm:name", "@type": "xsd:string"},
+    "name": {"@id": "farm:name"},
     "milkVolume": {"@id": "farm:milkVolume", "@type": "xsd:double"},    
     "weight": {"@id": "farm:weight", "@type": "xsd:integer"},
     "barn": {"@id": "farm:barn", "@type": "@id"},    
@@ -73,6 +76,7 @@ Example JSON-LD context:
 
 ```
 
+Some required types are set, some are not.
 
 ## Installation
 
