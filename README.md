@@ -8,25 +8,27 @@ This addon provides an adapter for interacting with the Fedora repository, http:
 
 The Fedora adapter requires a JSON-LD context corresponding to the models of the Ember application.
 Each model must be defined as a term in the context. By default, the context term must be the upper case camel form of the model name.
-For example the 'cow' ember model would be a 'Cow' term in the context. Properties of a model must also be declared in the context along with a type.
-The context must be consistent with the models.
+For example the 'cow' ember model would be a 'Cow' term in the context. Attributes and relationships of a model must also be declared
+in the context as terms with a type. By default an attribute or relationships name maps directly to a term and those names
+must be used consistently in all models.
 
+Attributes mapping:
+| Ember type | JSON-LD type             |
+| ---------- | -------------            |
+| boolean    | xsd:boolean              |
+| number     | xsd:integer, xsd:double  |
+| string     | xsd:string               |
+| date       | xsd:dateTime             |
+| object     | Unsupported              |
 
-| Ember type    | JSON-LD type             |
-| ------------- | -------------            |
-| boolean       | xsd:boolean              |
-| number        | xsd:integer, xsd:double  |
-| string        | xsd:string               |
-| date          | xsd:dateTime             |
-| object        | Unsupported              |
-| belongsTo     | @id                      |
-| hasMany       | @container: @set         |
-
-
+Relationship mapping:
+| Ember relationship | JSON-LD type           |
+| ------------------ | ------------           |
+| belongsTo          | @id                    |
+| hasMany            | @container: @set, @id  |
 
 The context must be publicly available and its location should be set with the 'contextURI' property of the serializer. The actual URI used for all the
 term definitions must be set with 'dataURI' property of the serializer.
-
 
 Example cow model:
 ```javascript
@@ -65,7 +67,7 @@ Example JSON-LD context:
     "milkVolume": {"@id": "farm:milkVolume", "@type": "xsd:double"},    
     "weight": {"@id": "farm:weight", "@type": "xsd:integer"},
     "barn": {"@id": "farm:barn", "@type": "@id"},    
-    "cows": {"@id": "farm:cows", "@container": "@set"}    
+    "cows": {"@id": "farm:cows", "@container": "@set", "@type": "@id"}
   }
 }
 
@@ -87,7 +89,7 @@ Example JSON-LD context:
 
 ### Integration testing
 
-By default integration is turned on. It can be turned off by setting the enviroment variable FEDORA_ADAPTER_INTEGRATION_TEST to false.
+By default integration is turned on. It can be turned off by setting the enviroment variable FEDORA_ADAPTER_INTEGRATION_TEST to 0.
 
 The following envirment variables configure integration testing:
 * FEDORA_ADAPTER_HOST       (http://localhost:8080)

@@ -12,6 +12,6 @@
     "milkVolume": {"@id": "farm:milkVolume", "@type": "xsd:double"},    
     "weight": {"@id": "farm:weight", "@type": "xsd:integer"},
     "barn": {"@id": "farm:barn", "@type": "@id"},    
-    "cows": {"@id": "farm:cows", "@container": "@set"}    
+    "cows": {"@id": "farm:cows", "@container": "@set", "@type": "@id"}    
   }
 }
