@@ -96,8 +96,6 @@ export default DS.Adapter.extend({
     });
   },
 
-  // TODO Could do a sparql PATCH on changedAttributres? Too complex?
-
   /**
     Called by the store when an existing record is saved
     via the `save` method on a model record instance.
@@ -122,6 +120,21 @@ export default DS.Adapter.extend({
       },
       data: JSON.stringify(data)
     });
+  },
+
+  /**
+    Called by the store when a record is deleted.
+
+    Deletes both the specified object and the tombstone from Fedora.
+
+    @method deleteRecord
+    @param {DS.Store} store
+    @param {DS.Model} type
+    @param {DS.Snapshot} snapshot
+    @return {Promise} promise
+  */
+  deleteRecord(store, type, snapshot) {
+      return this._delete(snapshot.id);
   },
 
  /**
