@@ -41,6 +41,8 @@ export default DS.Serializer.extend({
     Normalize JSON-LD returned in compact form from Fedora into the internal
     JSON-API based representation used by Ember Data.
 
+    Must handle single responses as well as a @graph.
+
     @since 1.13.0
     @method normalizeResponse
     @param {DS.Store} store
@@ -54,21 +56,27 @@ export default DS.Serializer.extend({
     //console.log('normalizeResponse for ' + requestType);
     //console.log(payload);
 
-    if ('@graph' in payload) {
-      // List of objects in graph, return all nodes of the expected type
+    // Extract dataURI prefix if available
+    let context = payload['@context'];
+    let data_prefix = null;
 
-      let type = this.serializeModelName(primaryModelClass.modelName);
+    if (context) {
+      data_prefix = Object.keys(context).find(key => context[key] === this.get('dataURI'));
+    }
+
+    if ('@graph' in payload) {
+      // One root node without type. Others should be of expected type.
 
       return {
-        data: payload['@graph'].filter(n => '@type' in n && n['@type'].includes(type)).map(n =>
-          this.normalize(primaryModelClass, n)
+        data: payload['@graph'].filter(n => '@type' in n).map(n =>
+          this.normalize(primaryModelClass, n, data_prefix)
         )
       };
     } else if ('@id' in payload) {
       // Assume single object
 
       return {
-        data: this.normalize(primaryModelClass, payload)
+        data: this.normalize(primaryModelClass, payload, data_prefix)
       };
     } else {
       // Assume empty
@@ -118,7 +126,6 @@ export default DS.Serializer.extend({
   },
 
   // Convert a JSON-LD property to a model attribute value
-  // TODO Handle JSON-LD typed values? Does compaction remove need?
   _normalize_attr(value, attr_type) {
     let value_type = typeof value;
 
@@ -217,12 +224,14 @@ export default DS.Serializer.extend({
     compacted and terms are in the dataURI namespace. Compact IRIs are checked
     to see if they are in the dataURI namespace. Full IRIs are not supported.
 
+    Context must either be passed in or present as hash['@context'].
+
     @method normalize
     @param {DS.Model} typeClass
     @param {Object} hash
     @return {Object}
   */
-  normalize(typeClass, hash) {
+  normalize(typeClass, hash, data_prefix = null) {
     //console.log('normalize')
     //console.log(hash);
 
@@ -231,22 +240,32 @@ export default DS.Serializer.extend({
     let attrs = {};
     let rels = {};
 
-    // Find prefix for dataURI
-    let context = hash['@context'];
-    let data_prefix = Object.keys(context).find(key => context[key] === this.get('dataURI'));
+    if (data_prefix) {
+      // Compact IRIs of dataURI are turned into terms.
 
-    // Compact IRIs of dataURI are turned into terms.
-    for (const [key, value] of Object.entries(hash)) {
-      let i = key.indexOf(':');
+      for (const [key, value] of Object.entries(hash)) {
+        let i = key.indexOf(':');
 
-      if (i != -1) {
-        let prefix = key.substring(0, i);
-        let newkey = key.substring(i + 1);
+        if (i != -1) {
+          let prefix = key.substring(0, i);
+          let newkey = key.substring(i + 1);
 
-        if (prefix === data_prefix) {
-          hash[newkey] = hash[key];
+          if (prefix === data_prefix) {
+            hash[newkey] = hash[key];
+          }
         }
       }
+    }
+
+    // Ensure that the expected @type is set
+    let expected_jsonld_type = this.serializeModelName(type);
+
+    if (data_prefix) {
+      expected_jsonld_type = data_prefix + ':' + expected_jsonld_type;
+    }
+
+    if (!hash['@type'].includes(expected_jsonld_type)) {
+      throw 'Unexpected JSON-LD type: ' + hash['@type'];
     }
 
     // Get attributes of the model found in the hash
