@@ -15,13 +15,13 @@ oddly influence compaction, but will not affect the adapter.
 
 
 Attributes mapping:
-| Ember type | JSON-LD type             | Required |
-| ---------- | -------------            | -------- |
-| boolean    | xsd:boolean              | false    |
-| number     | xsd:integer, xsd:double  | false    |
-| string     | xsd:string               | false    |
-| date       | xsd:dateTime             | true     | 
-| object     | Unsupported              |          |
+| Ember type | JSON-LD type             | Required | JSON type  |
+| ---------- | -------------            | -------- | ---------  |
+| boolean    | xsd:boolean              | false    | boolean    |
+| number     | xsd:integer, xsd:double  | false    | number     |
+| string     | xsd:string               | false    | string     |
+| date       | xsd:dateTime             | true     | ISO string |
+| object     | Unsupported              |          |            |
 
 Relationship mapping:
 | Ember relationship | JSON-LD type           | Required | 
