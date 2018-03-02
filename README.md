@@ -78,6 +78,17 @@ Example JSON-LD context:
 
 Some required types are set, some are not.
 
+## Limitations
+
+The adapter requires @id and @type be used. It does not check the context for possible redefinition.
+
+The only context processing is expansion of compact IRIs for property names and type values.
+This expansion only happens if the context is included. The default behavior is for Fedora to
+rather verbosely include context.
+
+The ember attribute type object (basic javasript object) is not supported. The Fedora single
+subject restriction would make support a bit awkward.
+
 ## Installation
 
 * `git clone <repository-url>` this repository
