@@ -4,9 +4,9 @@ import $ from 'jquery';
 import { camelize } from '@ember/string';
 import { pluralize } from 'ember-inflector';
 
-// TODO constants for standard accept prefer headers or auto add
-// TODO Error handling
-// TODO Logging
+const JSON_LD_ACCEPT_HEADER = 'application/ld+json; profile="http://www.w3.org/ns/json-ld#compacted"';
+const JSON_LD_PREFER_HEADER = 'return=representation; omit="http://fedora.info/definitions/v4/repository#ServerManaged"';
+const JSON_LD_INCLUDE_PREFER_HEADER = 'return=representation; omit="http://fedora.info/definitions/v4/repository#ServerManaged"; include="http://fedora.info/definitions/v4/repository#EmbedResources"'
 
 export default DS.Adapter.extend({
   username: null,
@@ -116,7 +116,7 @@ export default DS.Adapter.extend({
     return this._ajax(url, 'PUT', {
       headers: {
         'Content-Type': 'application/ld+json; charset=utf-8',
-        'Prefer': 'return=representation; omit="http://fedora.info/definitions/v4/repository#ServerManaged"'
+        'Prefer': JSON_LD_PREFER_HEADER
       },
       data: JSON.stringify(data)
     });
@@ -158,8 +158,8 @@ export default DS.Adapter.extend({
   findRecord(store, type, id, snapshot) {
     return this._ajax(id, 'GET', {
       headers: {
-        'Accept': 'application/ld+json; profile="http://www.w3.org/ns/json-ld#compacted"',
-        'Prefer': 'return=representation; omit="http://fedora.info/definitions/v4/repository#ServerManaged"'
+        'Accept': JSON_LD_ACCEPT_HEADER,
+        'Prefer': JSON_LD_PREFER_HEADER
       }
     });
   },
@@ -188,8 +188,8 @@ export default DS.Adapter.extend({
     return this._ajax(url, 'GET', {
       data: query,
       headers: {
-        'Accept': 'application/ld+json; profile="http://www.w3.org/ns/json-ld#compacted"',
-        'Prefer': 'return=representation; omit="http://fedora.info/definitions/v4/repository#ServerManaged"; include="http://fedora.info/definitions/v4/repository#EmbedResources"'
+        'Accept': JSON_LD_ACCEPT_HEADER,
+        'Prefer': JSON_LD_INCLUDE_PREFER_HEADER
       }
     });
   },
@@ -198,13 +198,6 @@ export default DS.Adapter.extend({
     Called by the store in order to fetch a JSON array for
     the records that match a particular query.
 
-    The `query` method makes an Ajax (HTTP GET) request to a URL
-    computed by `buildURL`, and returns a promise for the resulting
-    payload.
-
-    The `query` argument is a simple JavaScript object that will be passed directly
-    to the server as parameters.
-
     @method query
     @param {DS.Store} store
     @param {DS.Model} type
@@ -212,16 +205,7 @@ export default DS.Adapter.extend({
     @return {Promise} promise
   */
   query(store, type, query) {
-    let url = this.buildURL(type.modelName);
-
-    // TODO Fake here with filtering? Throw exception?
-    return this._ajax(url, 'GET', {
-      data: query,
-      headers: {
-        'Accept': 'application/ld+json; profile="http://www.w3.org/ns/json-ld#compacted"',
-        'Prefer': 'return=representation; omit="http://fedora.info/definitions/v4/repository#ServerManaged"; include="http://fedora.info/definitions/v4/repository#EmbedResources"'
-      }
-    });
+    throw "Query is unsupported."
   },
 
   // Return the path relative to the adapter root in the Fedora repository
