@@ -89,6 +89,8 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
 
     return run(() => store.findAll('barn')).then(barns => {
       assert.equal(barns.get('length'), 2);
+      assert.ok(barns.find(b => b.get('name') === 'Number one'));
+      assert.ok(barns.find(b => b.get('name') === 'Number two'));
     });
   });
 
