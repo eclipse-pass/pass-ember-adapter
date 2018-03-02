@@ -20,7 +20,7 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
     ENV.test.override = {
       host: 'http://localhost',
       namespace: 'data',
-      context: 'http://localhost/farm/',
+      context: 'http://localhost/farm.jsonld',
     }
   });
 
@@ -42,7 +42,7 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
       this.get('http://localhost/data/kine', function() {
         let response = {
           '@id': 'http://localhost/data/kine',
-          '@context': {farm: 'http://localhost/farm/'},
+          '@context': {farm: 'http://example.com/farm/'},
           '@graph': []
         };
 
@@ -51,9 +51,45 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
     });
 
     let store = this.owner.lookup('service:store');
-    let cows = run(() => store.findAll('cow'));
 
-    assert.equal(cows.get('length'), 0);
+    return run(() => store.findAll('cow')).then(cows => {
+      assert.equal(cows.get('length'), 0);
+    });
+  });
+
+  test('findAll returning two barns', function(assert) {
+    server = new Pretender(function() {
+      this.get('http://localhost/data/barns', function() {
+        let response = {
+          '@context': {
+            farm: 'http://example.com/farm/',
+            Barn: 'farm:Barn',
+            name: 'farm:name',
+            fedora: 'http://fedora.info/definitions/v4/repository#'
+          },
+          '@graph': [{
+            "@id": "http://localhost/data/barns",
+            "contains": ["http://localhost/data/barns/1", "http://localhost/data/barns2"]
+          },{
+            "@id": "http://localhost/data/barns/1",
+            "@type": ["farm:Barn", "fedora:Resource", "fedora:Container"],
+            "farm:name": "Number one",
+          },{
+            "@id": "http://localhost/data/barns/2",
+            "@type": ["Barn", "fedora:Resource", "fedora:Container"],
+            "name": "Number two",
+          }]
+        };
+
+        return [200, { "Content-Type": "application/ld+json" }, JSON.stringify(response)];
+      });
+    });
+
+    let store = this.owner.lookup('service:store');
+
+    return run(() => store.findAll('barn')).then(barns => {
+      assert.equal(barns.get('length'), 2);
+    });
   });
 
   test('createRecord for simple cow', function(assert) {
@@ -75,7 +111,7 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
       });
     });
 
-    run(() => {
+    return run(() => {
       let record = store.createRecord('cow', data);
       assert.ok(record);
 

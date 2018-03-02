@@ -257,15 +257,12 @@ export default DS.Serializer.extend({
       }
     }
 
-    // Ensure that the expected @type is set
-    let expected_jsonld_type = this.serializeModelName(type);
+    // Ensure that the expected @type is expected term or compact IRI.
+    let jsonld_type = this.serializeModelName(type);
 
-    if (data_prefix) {
-      expected_jsonld_type = data_prefix + ':' + expected_jsonld_type;
-    }
-
-    if (!hash['@type'].includes(expected_jsonld_type)) {
-      throw 'Unexpected JSON-LD type: ' + hash['@type'];
+    if (!hash['@type'].includes(jsonld_type) &&
+        (!data_prefix || !hash['@type'].includes(data_prefix + ':' + jsonld_type))) {
+      throw 'Could not find expected JSON-LD type ' + jsonld_type + ' in: ' + hash['@type'];
     }
 
     // Get attributes of the model found in the hash
