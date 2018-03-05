@@ -91,6 +91,13 @@ Example JSON-LD context:
 
 Some required types are set, some are not.
 
+## Ember data structure in Fedora
+
+The adapter uses a container for each ember model to store instances of that model.
+By default, the container is baseURI/NAME where NAME is the pluralized form of the model name.
+These containers must exist for the adapter to work.
+
+
 ## Limitations
 
 The adapter requires @id and @type be used. It does not check the context for possible redefinition.
@@ -101,6 +108,8 @@ rather verbosely include context.
 
 The ember attribute type object (basic javasript object) is not supported. The Fedora single
 subject restriction would make support a bit awkward.
+
+Ember attribute transforms are not supported.
 
 ## Installation
 

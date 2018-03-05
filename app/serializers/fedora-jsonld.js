@@ -1,8 +1,6 @@
 import DS from 'ember-data';
 import { classify } from '@ember/string';
 
-// TODO Figure out how to disable eslint for certain functions.
-/* eslint no-unused-vars: 0 */
 
 // Assumes compact JSON-LD representation without server triples.
 // Required properties:
@@ -52,6 +50,7 @@ export default DS.Serializer.extend({
     @param {String} requestType
     @return {Object} JSON-API Document
   */
+  // eslint-disable-next-line no-unused-vars
   normalizeResponse(store, primaryModelClass, payload, id, requestType) {
     //console.log('normalizeResponse for ' + requestType);
     //console.log(payload);
@@ -86,8 +85,6 @@ export default DS.Serializer.extend({
       };
     }
   },
-
-  // TODO Allow custom transforms?
 
   // Convert a model attribute value to a JSON-LD value
   _serialize_attr(value, attr_type) {
@@ -159,19 +156,15 @@ export default DS.Serializer.extend({
   },
 
   /**
-    The `serialize` method is used when a record is saved in order to convert
-    the record into the form that your external data source expects.
-
-    `serialize` takes an optional `options` hash with a single option:
-
-    - `includeId`: If this is `true`, `serialize` should include the ID
-      in the serialized object it builds.
+    Convert the JSON representation of a model to JSON-LD suitable for Fedora.
+    Custom transforms are not supported.
 
     @method serialize
     @param {DS.Snapshot} snapshot
     @param {Object} [options]
     @return {Object}
   */
+  // eslint-disable-next-line no-unused-vars
   serialize(snapshot, options) {
     //console.log('serialize');
 
@@ -219,6 +212,7 @@ export default DS.Serializer.extend({
 
      return jsonld;
   },
+
  /**
     Normalize JSON-LD to internal representation. Assume that JSON-LD has been
     compacted and terms are in the dataURI namespace. Compact IRIs are checked
@@ -243,6 +237,7 @@ export default DS.Serializer.extend({
     if (data_prefix) {
       // Compact IRIs of dataURI are turned into terms.
 
+      // eslint-disable-next-line no-unused-vars
       for (const [key, value] of Object.entries(hash)) {
         let i = key.indexOf(':');
 

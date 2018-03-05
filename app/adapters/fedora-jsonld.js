@@ -8,11 +8,11 @@ const JSON_LD_ACCEPT_HEADER = 'application/ld+json; profile="http://www.w3.org/n
 const JSON_LD_PREFER_HEADER = 'return=representation; omit="http://fedora.info/definitions/v4/repository#ServerManaged"';
 const JSON_LD_INCLUDE_PREFER_HEADER = 'return=representation; omit="http://fedora.info/definitions/v4/repository#ServerManaged"; include="http://fedora.info/definitions/v4/repository#EmbedResources"'
 
-
 // Configuration properties:
 //   baseURI: Absolute URI of Fedora container used to store data.
 //   username: Usernmae to use for HTTP Basic.
 //   password: Password to use for HTTP Basic
+
 
 export default DS.Adapter.extend({
   username: null,
@@ -107,7 +107,8 @@ export default DS.Adapter.extend({
 
   /**
     Called by the store when an existing record is saved
-    via the `save` method on a model record instance.
+    via the `save` method on a model record instance. The Fedora container resprenting
+    the record is replaced with a PUT.
 
     TODO Handle concurrency, if-modified
 
@@ -148,12 +149,8 @@ export default DS.Adapter.extend({
 
  /**
     Called by the store in order to fetch the JSON for a given
-    type and ID.
+    type and ID. The normalizeResponse method on the serializer is called on the result.
 
-    The `findRecord` method makes an Ajax request to a URL computed by
-    `buildURL`, and returns a promise for the resulting payload.
-
-    This method performs an HTTP `GET` request with the id provided as part of the query string.
 
     @since 1.13.0
     @method findRecord
@@ -163,7 +160,7 @@ export default DS.Adapter.extend({
     @param {DS.Snapshot} snapshot
     @return {Promise} promise
   */
-  /* eslint no-unused-vars: 0 */
+  // eslint-disable-next-line no-unused-vars
   findRecord(store, type, id, snapshot) {
     return this._ajax(id, 'GET', {
       headers: {
@@ -174,12 +171,12 @@ export default DS.Adapter.extend({
   },
 
   /**
-    Called by the store in order to fetch a JSON array for all
-    of the records for a given type.
+    Called by the store in order to fetch all instances of a type.
+    Fedora keeps all instances of a type in a container. This GET returns
+    all of those children in a @graph.
 
-    The `findAll` method makes an Ajax (HTTP GET) request to a URL computed by `buildURL`, and returns a
+    The normalizeResponse method on the serializer is called on the result.
 
-    promise for the resulting payload.
     @method findAll
     @param {DS.Store} store
     @param {DS.Model} type
@@ -187,6 +184,7 @@ export default DS.Adapter.extend({
     @param {DS.SnapshotRecordArray} snapshotRecordArray
     @return {Promise} promise
   */
+  // eslint-disable-next-line no-unused-vars
   findAll(store, type, sinceToken, snapshotRecordArray) {
     let url = this.buildURL(type.modelName);
     let query = {};
@@ -213,6 +211,7 @@ export default DS.Adapter.extend({
     @param {Object} query
     @return {Promise} promise
   */
+  // eslint-disable-next-line no-unused-vars
   query(store, type, query) {
     throw "Query is unsupported."
   },
