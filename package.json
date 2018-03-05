@@ -1,12 +1,12 @@
 {
   "name": "ember-fedora-adapter",
-  "version": "0.0.0",
-  "description": "The default blueprint for ember-cli addons.",
+  "version": "0.0.1",
+  "description": "Adapter for the Fedora repository.",
   "keywords": [
     "ember-addon"
   ],
-  "license": "MIT",
-  "author": "",
+  "license": "Apache-2.0",
+  "author": "Mark Patton <mpatton@jhu.edu>",
   "directories": {
     "doc": "doc",
     "test": "tests"
