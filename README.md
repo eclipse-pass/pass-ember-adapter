@@ -4,6 +4,19 @@
 
 This addon provides an adapter for interacting with the Fedora repository, http://fedorarepository.org/.
 
+## Configuration
+
+### Adapter
+
+* baseURI: Absolute URI to Fedora container which will host Ember data
+* username: If set, used to generate HTTP Basic authorization header.
+* password: If set, used to generate HTTP Basic authorization header.
+
+### Serializer
+
+* contextURI: The URI of the external JSON-LD context to load. Must be publicly accessible.
+
+
 ## Using the Fedora adapter
 
 The Fedora adapter requires a JSON-LD context corresponding to the models of the Ember application.
@@ -15,13 +28,13 @@ oddly influence compaction, but will not affect the adapter.
 
 
 Attributes mapping:
-| Ember type | JSON-LD type             | Required | JSON type  |
-| ---------- | -------------            | -------- | ---------  |
-| boolean    | xsd:boolean              | false    | boolean    |
-| number     | xsd:integer, xsd:double  | false    | number     |
-| string     | xsd:string               | false    | string     |
-| date       | xsd:dateTime             | true     | ISO string |
-| object     | Unsupported              |          |            |
+| Ember type | JSON-LD type             | Required |
+| ---------- | -------------            | -------- |
+| boolean    | xsd:boolean              | false    |
+| number     | xsd:integer, xsd:double  | false    |
+| string     | xsd:string               | false    |
+| date       | xsd:dateTime             | true     |
+| object     | Unsupported              |          |
 
 Relationship mapping:
 | Ember relationship | JSON-LD type           | Required | 

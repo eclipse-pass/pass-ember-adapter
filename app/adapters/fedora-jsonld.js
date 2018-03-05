@@ -8,6 +8,12 @@ const JSON_LD_ACCEPT_HEADER = 'application/ld+json; profile="http://www.w3.org/n
 const JSON_LD_PREFER_HEADER = 'return=representation; omit="http://fedora.info/definitions/v4/repository#ServerManaged"';
 const JSON_LD_INCLUDE_PREFER_HEADER = 'return=representation; omit="http://fedora.info/definitions/v4/repository#ServerManaged"; include="http://fedora.info/definitions/v4/repository#EmbedResources"'
 
+
+// Configuration properties:
+//   baseURI: Absolute URI of Fedora container used to store data.
+//   username: Usernmae to use for HTTP Basic.
+//   password: Password to use for HTTP Basic
+
 export default DS.Adapter.extend({
   username: null,
   password: null,
@@ -218,22 +224,13 @@ export default DS.Adapter.extend({
   // Return the path to the root container in a Fedora container which will hold all data
   // managed by the adapter.
   buildURL(modelName = null) {
-    let host = this.get('host');
-    let namespace = this.get('namespace');
+    let base = this.get('baseURI');
 
-    if (!host || host === '/') {
-      host = '';
+    if (base.endsWith('/')) {
+      base = base.slice(-1);
     }
 
-    let url = [];
-
-    if (host) {
-      url.push(host);
-    }
-
-    if (namespace) {
-      url.push(namespace);
-    }
+    let url = [base];
 
     if (modelName) {
       url.push(this.buildModelPath(modelName));

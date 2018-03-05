@@ -49,8 +49,7 @@ module.exports = function(environment) {
 
   // Test configuration for dummy app
   ENV.test = {
-    host: 'http://localhost:8080',
-    namespace: 'rest/farm',
+    base: 'http://localhost:8080/rest/farm',
     context: 'http://localhost/farm.jsonld',
     username: 'admin',
     password: 'admin',
@@ -59,10 +58,6 @@ module.exports = function(environment) {
 
   if (process.env.FEDORA_ADAPTER_HOST) {
     ENV.test.host = process.env.FEDORA_ADAPTER_HOST;
-  }
-
-  if (process.env.FEDORA_ADAPTER_NAMESPACE) {
-    ENV.test.namespace = process.env.FEDORA_ADAPTER_NAMESPACE;
   }
 
   if (process.env.FEDORA_ADAPTER_CONTEXT) {

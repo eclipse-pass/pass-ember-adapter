@@ -18,8 +18,7 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
 
   hooks.before(() => {
     ENV.test.override = {
-      host: 'http://localhost',
-      namespace: 'data',
+      base: 'http://localhost/data',
       context: 'http://localhost/farm.jsonld',
     }
   });
