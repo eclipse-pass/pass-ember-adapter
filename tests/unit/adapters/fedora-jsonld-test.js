@@ -168,4 +168,40 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
 
     }).then(() => assert.verifySteps(['post cow', 'post barn', 'save', 'put cow', 'put barn', 'update']));
   });
+
+  test('createRecord for simple cow', function(assert) {
+    let store = this.owner.lookup('service:store');
+    let id = 'http://localhost/data/kine/a/b/21'
+
+    let data = {
+      name: 'yoda',
+      weight: 124,
+      healthy: false,
+      milkVolume: 30.5,
+      birthDate: new Date(Date.UTC(80, 11, 1, 0, 0, 0))
+    };
+
+    server = new Pretender(function() {
+      this.post('http://localhost/data/kine', function() {
+        assert.step('post');
+        return [200, { "Content-Type": "plain/text" }, id];
+      });
+    });
+
+    return run(() => {
+      let record = store.createRecord('cow', data);
+      assert.ok(record);
+
+      return record.save().then(() => {
+        assert.step('save')
+
+        assert.equal(data.name, record.get('name'));
+        assert.equal(data.weight, record.get('weight'));
+        assert.equal(data.healthy, record.get('healthy'));
+        assert.equal(data.milkVolume, record.get('milkVolume'));
+        assert.equal(data.birthDate, record.get('birthDate'));
+      });
+
+    }).then(() => assert.verifySteps(['post', 'save']));
+  });
 });
