@@ -138,6 +138,47 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
     });
   });
 
+  integrationTest('delete a barn', function(assert) {
+    let store = this.owner.lookup('service:store');
+
+    let data = {
+      name: 'skywalker',
+    };
+
+    let id;
+
+    // Persist a barn and then delete it
+    let result = run(() => {
+      let barn = store.createRecord('barn', data);
+      assert.ok(barn);
+
+      assert.equal(barn.get('name'), data.name);
+
+      return barn.save().then(() => barn);
+    }).then(barn => {
+      assert.step('save');
+
+      id = barn.get('id');
+      assert.ok(id);
+
+      // Clear the cache to make sure we test the retrieved record.
+      //store.unloadAll();
+
+      return barn.destroyRecord();
+    }).then(() => {
+      assert.step('delete');
+
+      // TODO Must clear store or findRecord causes internal ember data error 
+      store.unloadAll();
+
+      return store.findRecord('barn', id).catch(() => assert.step('get fail'));
+    });
+
+    return result.then(() => {
+      assert.verifySteps(['save', 'delete', 'get fail']);
+    });
+  });
+
   integrationTest('create related cow and barn', function(assert) {
     let store = this.owner.lookup('service:store');
 
@@ -220,7 +261,6 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
           assert.equal(cows.get('length'), 1);
           assert.equal(cows.get('firstObject.id'), cow_id);
         });
-
     });
 
     return result.then(() => {
