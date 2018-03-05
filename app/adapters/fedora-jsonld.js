@@ -46,6 +46,9 @@ export default DS.Adapter.extend({
       Object.keys(headers).forEach((key) => xhr.setRequestHeader(key, headers[key]));
     };
 
+    // Needed for cross-site support.
+    options.xhrFields = {withCredentials: true};
+
     return $.ajax(options);
   },
 
