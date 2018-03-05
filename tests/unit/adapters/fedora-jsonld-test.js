@@ -93,39 +93,79 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
     });
   });
 
-  test('createRecord for simple cow', function(assert) {
+  test('createRecord and updateRecord for barn and related cow', function(assert) {
     let store = this.owner.lookup('service:store');
-    let id = 'http://localhost/data/kine/a/b/21'
+    let barn_id = 'http://localhost/data/barns/a/b/21';
+    let cow_id = 'http://localhost/data/kine/123';
 
-    let data = {
-      name: 'yoda',
-      weight: 124,
-      healthy: false,
-      milkVolume: 30.5,
-      birthDate: new Date(Date.UTC(80, 11, 1, 0, 0, 0))
+    let barn_data = {
+      name: 'byrne'
+    };
+
+    let cow_data = {
+      name: 'luke'
     };
 
     server = new Pretender(function() {
+      this.post('http://localhost/data/barns', function() {
+        assert.step('post barn');
+        return [200, { "Content-Type": "plain/text" }, barn_id];
+      });
+
       this.post('http://localhost/data/kine', function() {
-        assert.step('post');
-        return [200, { "Content-Type": "plain/text" }, id];
+        assert.step('post cow');
+        return [200, { "Content-Type": "plain/text" }, cow_id];
+      });
+
+      this.put('http://localhost/data/kine/123', function() {
+        assert.step('put cow');
+        return [200, { "Content-Type": "plain/text" }, ''];
+      });
+
+      this.put('http://localhost/data/barns/a/b/21', function() {
+        assert.step('put barn');
+        return [200, { "Content-Type": "plain/text" }, ''];
       });
     });
 
     return run(() => {
-      let record = store.createRecord('cow', data);
-      assert.ok(record);
+      let barn = store.createRecord('barn', barn_data);
+      assert.ok(barn);
 
-      return record.save().then(() => {
-        assert.step('save')
+      let cow = store.createRecord('cow', cow_data);
+      assert.ok(cow);
 
-        assert.equal(data.name, record.get('name'));
-        assert.equal(data.weight, record.get('weight'));
-        assert.equal(data.healthy, record.get('healthy'));
-        assert.equal(data.milkVolume, record.get('milkVolume'));
-        assert.equal(data.birthDate, record.get('birthDate'));
-      });
+      return cow.save().then(() => barn.save());
+    }).then(() => {
+      assert.step('save')
 
-    }).then(() => assert.verifySteps(['post', 'save']));
+      let barn = store.peekRecord('barn', barn_id);
+      let cow = store.peekRecord('cow', cow_id);
+
+      assert.ok(barn);
+      assert.ok(cow);
+
+      assert.equal(barn_data.name, barn.get('name'));
+      assert.equal(cow_data.name, cow.get('name'));
+
+      // Add relationships and update the objects
+
+      barn.get('cows').pushObject(cow);
+      cow.set('barn', barn);
+
+      return cow.save().then(() => barn.save());
+    }).then(() => {
+      assert.step('update');
+
+      let barn = store.peekRecord('barn', barn_id);
+      let cow = store.peekRecord('cow', cow_id);
+
+      let cows = barn.get('cows');
+
+      assert.equal(cows.get('length'), 1);
+      assert.equal(cows.get('firstObject.id'), cow_id);
+      assert.equal(cow.get('barn.id'), barn_id);
+
+    }).then(() => assert.verifySteps(['post cow', 'post barn', 'save', 'put cow', 'put barn', 'update']));
   });
 });
