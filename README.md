@@ -129,8 +129,7 @@ Ember attribute transforms are not supported.
 By default integration is turned on. It can be turned off by setting the enviroment variable FEDORA_ADAPTER_INTEGRATION_TEST to 0.
 
 The following envirment variables configure integration testing:
-* FEDORA_ADAPTER_HOST       (http://localhost:8080)
-* FEDORA_ADAPTER_NAMESPACE  (rest/farm)
+* FEDORA_ADAPTER_BASE       (http://localhost:8080/rest/farm)
 * FEDORA_ADAPTER_CONTEXT    (Location of http://localhost:4200/farm.jsonld)
 * FEDORA_ADAPTER_USER_NAME  (Username to connect to Fedora)
 * FEDORA_ADAPTER_PASSWORD   (Password to connect to Fedora)

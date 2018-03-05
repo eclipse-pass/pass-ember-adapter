@@ -56,8 +56,8 @@ module.exports = function(environment) {
     integration: true
   }
 
-  if (process.env.FEDORA_ADAPTER_HOST) {
-    ENV.test.host = process.env.FEDORA_ADAPTER_HOST;
+  if (process.env.FEDORA_ADAPTER_BASE) {
+    ENV.test.base = process.env.FEDORA_ADAPTER_BASE;
   }
 
   if (process.env.FEDORA_ADAPTER_CONTEXT) {
