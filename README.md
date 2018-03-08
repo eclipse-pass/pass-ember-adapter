@@ -28,6 +28,7 @@ oddly influence compaction, but will not affect the adapter.
 
 
 Attributes mapping:
+
 | Ember type | JSON-LD type             | Required |
 | ---------- | -------------            | -------- |
 | boolean    | xsd:boolean              | false    |
@@ -37,6 +38,7 @@ Attributes mapping:
 | object     | Unsupported              |          |
 
 Relationship mapping:
+
 | Ember relationship | JSON-LD type           | Required | 
 | ------------------ | ------------           | -------- |
 | belongsTo          | @id                    | true     |
