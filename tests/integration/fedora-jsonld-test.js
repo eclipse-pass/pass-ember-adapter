@@ -28,10 +28,10 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
   integrationTest('findAll on empty type', function(assert) {
     let store = this.owner.lookup('service:store');
 
-    let cows = run(() => store.findAll('cow'));
-
-    assert.ok(cows);
-    assert.equal(cows.get('length'), 0);
+    return run(() => store.findAll('cow')).then(cows => {
+      assert.ok(cows);
+      assert.equal(cows.get('length'), 0);
+    });
   });
 
   integrationTest('findAll on two barns', function(assert) {
