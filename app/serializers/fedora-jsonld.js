@@ -93,19 +93,19 @@ export default DS.Serializer.extend({
     switch (attr_type) {
       case 'string':
         if (value_type != 'string') {
-            throw 'Value type' + value_type + ' not compatible with attribute type ' + attr_type;
+          throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value;
         }
 
         return value;
       case 'number':
         if (value_type != 'number') {
-            throw 'Value type' + value_type + ' not compatible with attribute type ' + attr_type;
+            throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value;
         }
 
         return value;
       case 'boolean':
         if (value_type != 'boolean') {
-            throw 'Value type' + value_type + ' not compatible with attribute type ' + attr_type;
+            throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value;
         }
 
         return value;
@@ -129,19 +129,19 @@ export default DS.Serializer.extend({
     switch (attr_type) {
       case 'string':
         if (value_type != 'string') {
-            throw 'Value type' + value_type + ' not compatible with attribute type ' + attr_type;
+            throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value;
         }
 
         return value;
       case 'number':
         if (value_type != 'number') {
-            throw 'Value type' + value_type + ' not compatible with attribute type ' + attr_type;
+            throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value;
         }
 
         return value;
       case 'boolean':
         if (value_type != 'boolean') {
-            throw 'Value type' + value_type + ' not compatible with attribute type ' + attr_type;
+            throw 'Value type' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value;
         }
 
         return value;
