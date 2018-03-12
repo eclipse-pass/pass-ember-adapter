@@ -6,11 +6,11 @@
     "Cow": "farm:Cow",
     "Barn": "farm:Barn",    
 
-    "healthy": {"@id": "farm:healthy", "@type": "xsd:boolean"},
+    "healthy": {"@id": "farm:healthy"},
     "birthDate": {"@id": "farm:birthDate", "@type": "xsd:dateTime"},
-    "name": {"@id": "farm:name", "@type": "xsd:string"},
-    "milkVolume": {"@id": "farm:milkVolume", "@type": "xsd:double"},    
-    "weight": {"@id": "farm:weight", "@type": "xsd:integer"},
+    "name": {"@id": "farm:name"},
+    "milkVolume": {"@id": "farm:milkVolume"},    
+    "weight": {"@id": "farm:weight"},
     "barn": {"@id": "farm:barn", "@type": "@id"},    
     "cows": {"@id": "farm:cows", "@container": "@set", "@type": "@id"}    
   }
