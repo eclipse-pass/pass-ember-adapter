@@ -8,6 +8,9 @@ node_js:
 sudo: false
 dist: trusty
 
+services:
+  - docker
+
 addons:
   chrome: stable
 
@@ -40,6 +43,9 @@ before_install:
   - npm --version
 
 script:
+  - docker-compose pull
+  - docker-compose up -d
+
   # Usually, it's ok to finish the test scenario without reverting
   #  to the addon's original dependency state, skipping "cleanup".
   - node_modules/.bin/ember try:one $EMBER_TRY_SCENARIO --skip-cleanup

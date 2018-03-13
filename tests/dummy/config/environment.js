@@ -49,10 +49,10 @@ module.exports = function(environment) {
 
   // Test configuration for dummy app
   ENV.test = {
-    base: 'http://localhost:8080/rest/farm',
-    context: 'http://localhost/farm.jsonld',
+    base: 'http://localhost:8080/fcrepo/rest/farm',
+    context: 'https://raw.githubusercontent.com/OA-PASS/ember-fedora-adapter/master/tests/dummy/public/farm.jsonld',
     username: 'admin',
-    password: 'admin',
+    password: 'moo',
     integration: true
   }
 

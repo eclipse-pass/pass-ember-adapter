@@ -1,5 +1,7 @@
 # ember-fedora-adapter
 
+[![Build Status](https://travis-ci.org/OA-PASS/ember-fedora-adapter.png?branch=master)](https://travis-ci.org/OA-PASS/ember-fedora-adapter)
+
 ## Introduction
 
 This addon provides an adapter for interacting with the Fedora repository, http://fedorarepository.org/.
