@@ -44,7 +44,7 @@ before_install:
 before_script:
   - docker-compose pull
   - docker-compose up -d
-  - ./fedora-wait.sh $FEDORA_ADAPTER_BASE
+  - bash fedora-wait.sh $FEDORA_ADAPTER_BASE
   - docker-compose ps
   
 script:
