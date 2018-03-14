@@ -1,9 +1,10 @@
 #! /bin/sh
 
-REPO="$1"
+# Read docker configuration
+. .env
 
 function wait_until_up {
-    CMD="curl -u bootstrap:bootstrap --write-out %{http_code} --silent -o /dev/stderr ${REPO}"
+    CMD="curl -u bootstrap:bootstrap --write-out %{http_code} --silent -o /dev/stderr ${FEDORA_ADAPTER_BASE}"
     echo "Waiting for response from Fedora via ${CMD}"
     RESULT=$(${CMD})
     until [ ${RESULT} -lt 400 ] && [ ${RESULT} -gt 199 ]
