@@ -2,8 +2,6 @@ import { module, test, skip } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
 import { run } from "@ember/runloop";
 import ENV from 'dummy/config/environment';
-import RSVP from 'rsvp';
-
 
 // Test the Fedora JSON-LD adapter hitting a live Fedora instance
 
@@ -15,7 +13,7 @@ function integrationTest(name, stuff) {
       skip(name, stuff);
     }
 }
-// TODO try removing xsd:string from context
+
 module('Integration | Adapter | fedora jsonld', function(hooks) {
   setupApplicationTest(hooks);
 
@@ -55,8 +53,16 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       barn2_record = store.createRecord('barn', barn2_data);
       assert.ok(barn2_record);
 
-      return RSVP.all([barn1_record.save(), barn2_record.save()]);
-    }).then(() => {
+      return barn1_record.save();
+    }).then(barn1 => {
+      assert.ok(barn1);
+      assert.ok(barn1.get('id'));
+
+      return barn2_record.save();
+    }).then(barn2 => {
+      assert.ok(barn2);
+      assert.ok(barn2.get('id'));
+
       assert.step('save');
 
       barn1_id = barn1_record.get('id');
@@ -168,7 +174,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
     }).then(() => {
       assert.step('delete');
 
-      // TODO Must clear store or findRecord causes internal ember data error 
+      // TODO Must clear store or findRecord causes internal ember data error
       store.unloadAll();
 
       return store.findRecord('barn', id).catch(() => assert.step('get fail'));
