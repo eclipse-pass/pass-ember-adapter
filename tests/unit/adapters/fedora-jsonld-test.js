@@ -109,12 +109,12 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
     server = new Pretender(function() {
       this.post('http://localhost/data/barns', function() {
         assert.step('post barn');
-        return [200, { "Content-Type": "plain/text" }, barn_id];
+        return [200, { "Content-Type": "plain/text", "Location": barn_id }, barn_id];
       });
 
       this.post('http://localhost/data/kine', function() {
         assert.step('post cow');
-        return [200, { "Content-Type": "plain/text" }, cow_id];
+        return [200, { "Content-Type": "plain/text", "Location": cow_id }, cow_id];
       });
 
       this.put('http://localhost/data/kine/123', function() {
@@ -184,7 +184,7 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
     server = new Pretender(function() {
       this.post('http://localhost/data/kine', function() {
         assert.step('post');
-        return [200, { "Content-Type": "plain/text" }, id];
+        return [200, { "Content-Type": "plain/text", "Location": id }, id];
       });
     });
 

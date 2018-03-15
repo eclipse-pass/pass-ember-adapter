@@ -94,14 +94,13 @@ export default DS.Adapter.extend({
     return this._ajax(url, "POST", {
       data: JSON.stringify(data),
       headers: {'Content-Type': 'application/ld+json; charset=utf-8'},
-      dataFilter: function(resp) {
-        // Fedora returns assigned URI as plain text.
-        // Return JSON-LD object for serializer.normalizeResponse.
+    }).then((resp, status, xhr) => {
+      // Return JSON-LD object with @id for serializer.normalizeResponse.
 
-        data['@id'] = resp.trim();
+      let id = xhr.getResponseHeader('Location');
+      data['@id'] = id;
 
-        return data;
-      }
+      return data;
     });
   },
 
