@@ -273,4 +273,25 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       assert.verifySteps(['cow save', 'barn save', 'cow findRecord', 'barn findRecord'])
     });
   });
+
+  integrationTest('simple query for a cow', function(assert) {
+    let store = this.owner.lookup('service:store');
+
+    let query = {
+      'term' : { 'name' : 'bessie' }
+    };
+
+    return run(() => {
+      return store.query('cow', query);
+    }).then(result => {
+      assert.step('query');
+
+      assert.ok(result);
+      assert.equal(result.get('length'), 1);
+
+      assert.equal(result.get('firstObject.name'), 'bessie');
+      assert.equal(result.get('firstObject.milkVolume'), 10);
+
+    }).then(() => assert.verifySteps(['query']));
+  });
 });

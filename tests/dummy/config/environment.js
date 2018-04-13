@@ -50,6 +50,7 @@ module.exports = function(environment) {
   // Test configuration for dummy app
   ENV.test = {
     base: 'http://localhost:8080/fcrepo/rest/farm',
+    elasticsearch: 'http://localhost:9200/pass/_search',
     context: 'https://raw.githubusercontent.com/OA-PASS/ember-fedora-adapter/master/tests/dummy/public/farm.jsonld',
     username: 'admin',
     password: 'moo',

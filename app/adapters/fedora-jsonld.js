@@ -10,6 +10,7 @@ const JSON_LD_INCLUDE_PREFER_HEADER = 'return=representation; omit="http://fedor
 
 // Configuration properties:
 //   baseURI: Absolute URI of Fedora container used to store data.
+//   elasticsearchURI: Absolute URI of Elasticsearch service
 //   username: Usernmae to use for HTTP Basic.
 //   password: Password to use for HTTP Basic
 
@@ -47,7 +48,7 @@ export default DS.Adapter.extend({
     };
 
     // Needed for cross-site support.
-    options.xhrFields = {withCredentials: true};
+    //options.xhrFields = {withCredentials: true};
 
     return $.ajax(options);
   },
@@ -200,9 +201,54 @@ export default DS.Adapter.extend({
     });
   },
 
+  // Create an elasticsearch query that restricts the given query to the given type.
+  // Add size and from from options if presents
+  _create_elasticsearch_query(query, type, options) {
+    let result = {
+      query: {
+        bool: {
+          must: query,
+          filter: {term: {"@type": type.modelName}}
+        }
+      }
+    };
+
+    if (options.size) {
+      result['size'] = options.size;
+    }
+
+    if (options.from) {
+      result['from'] = options.from;
+    }
+
+    //console.log(result);
+
+    return result;
+  },
+
+  // Turn Elasticsearch results into a JSON-LD @graph suitable for normalizeResponse.
+  _parse_elasticsearch_result(result) {
+    return {
+      '@graph': result.hits.hits.map(hit => hit._source)
+    };
+  },
+
  /**
-    Called by the store in order to fetch a JSON array for
-    the records that match a particular query.
+    Called by the store in order to fetch an array of records that match an
+    Elasticsearch query.
+
+    The query argument must be a clause in the Elasticsearch query syntax.
+    See https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html.
+    The query argument is the subject of a must and then combined with a filter for the 
+    given type.
+
+    Each property of a model object is available as an Elasticsearch field. The type of
+    field influences how it can be searched. Check the index configuration to find the
+    types.
+
+    Options:
+      size - how many matching records to return
+      from - offset into total list of matching records
 
     @method query
     @param {DS.Store} store
@@ -210,9 +256,15 @@ export default DS.Adapter.extend({
     @param {Object} query
     @return {Promise} promise
   */
-  // eslint-disable-next-line no-unused-vars
-  query(store, type, query) {
-    throw "Query is unsupported."
+
+  query(store, type, query, options = {}) {
+    let url = this.get('elasticsearchURI');
+    let data = this._create_elasticsearch_query(query, type, options);
+
+    return this._ajax(url, 'POST', {
+      data: JSON.stringify(data),
+      headers: {'Content-Type': 'application/json; charset=utf-8'},
+    }).then(result => this._parse_elasticsearch_result(result));
   },
 
   // Return the path relative to the adapter root in the Fedora repository
