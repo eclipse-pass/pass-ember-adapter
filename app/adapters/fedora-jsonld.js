@@ -10,7 +10,7 @@ const JSON_LD_INCLUDE_PREFER_HEADER = 'return=representation; omit="http://fedor
 
 // Configuration properties:
 //   baseURI: Absolute URI of Fedora container used to store data.
-//   elasticsearchURI: Absolute URI of Elasticsearch service
+//   elasticsearchURI: Absolute URI of Elasticsearch search service.
 //   username: Usernmae to use for HTTP Basic.
 //   password: Password to use for HTTP Basic
 
@@ -77,8 +77,6 @@ export default DS.Adapter.extend({
   // Return a Promise which deletes the specified Elasticsearch index
   // and then recreates if with the given configuration.
   setupElasticsearch(url, config) {
-    console.log('moooo  ' + url);
-
     let create = () => this._ajax(url, 'PUT', {
       headers: {'Content-Type': 'application/json'},
       data: JSON.stringify(config)
