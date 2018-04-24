@@ -294,9 +294,9 @@ export default DS.Adapter.extend({
     let base = this.get('baseURI');
 
     if (base.endsWith('/')) {
-      base = base.slice(-1);
+      base = base.slice(0, base.length - 1);
     }
-
+      
     let url = [base];
 
     if (modelName) {
