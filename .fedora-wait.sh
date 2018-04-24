@@ -6,7 +6,7 @@
 # Wait until we get a 200 from Fedora or fail some number of times.
 
 function wait_until_up {
-    CMD="curl -I -u admin:moo --write-out %{http_code} --silent -o /dev/stderr ${FEDORA_ADAPTER_BASE}"
+    CMD="curl -I -u admin:moo --write-out %{http_code} --silent -o /dev/stderr ${FEDORA_WAIT_URL}"
     echo "Waiting for response from Fedora via ${CMD}"
 
     RESULT=0
