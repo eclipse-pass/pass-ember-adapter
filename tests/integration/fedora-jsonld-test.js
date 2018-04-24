@@ -20,7 +20,28 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
   hooks.beforeEach(function() {
     let adapter = this.owner.lookup('adapter:application');
 
-    return adapter.setupFedora(['cow', 'barn']);
+    // Configure ES index for farm context
+    let es_index = ENV.test.elasticsearch_index;
+
+    let config = {
+      "mappings": {
+        "_doc": {
+          "dynamic": false,
+          "properties": {
+            "@id": {"type": "keyword" },
+            "@type": {"type": "keyword"},
+            "name": {"type": "text"},
+            "weight": {"type": "integer"},
+            "milkVolume": {"type": "float"},
+            "barn": {"type": "keyword"},
+            "cows": {"type": "keyword"}
+          }
+        }
+      }
+    };
+
+    return adapter.setupFedora(['cow', 'barn']).then(() =>
+                    adapter.setupElasticsearch(es_index, config));
   });
 
   integrationTest('findAll on empty type', function(assert) {
@@ -277,11 +298,25 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
   integrationTest('simple query for a cow', function(assert) {
     let store = this.owner.lookup('service:store');
 
+    let cow_data = {
+      name: 'Mooni',
+      weight: 80,
+      milkVolume: 100,
+      birthDate: new Date()
+    };
+
     let query = {
-      'term' : { 'name' : 'bessie' }
+      'term' : { 'name' : cow_data.name}
     };
 
     return run(() => {
+      let cow_record = store.createRecord('cow', cow_data);
+      assert.ok(cow_record);
+
+      return cow_record.save();
+    }).then(() => {
+      assert.step('save');
+
       return store.query('cow', query);
     }).then(result => {
       assert.step('query');
@@ -289,9 +324,9 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       assert.ok(result);
       assert.equal(result.get('length'), 1);
 
-      assert.equal(result.get('firstObject.name'), 'bessie');
-      assert.equal(result.get('firstObject.milkVolume'), 10);
+      assert.equal(result.get('firstObject.name'), cow_data.name);
+      assert.equal(result.get('firstObject.milkVolume'), cow_data.milkVolume);
 
-    }).then(() => assert.verifySteps(['query']));
+    }).then(() => assert.verifySteps(['save', 'query']));
   });
 });
