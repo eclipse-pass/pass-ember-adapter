@@ -20,6 +20,7 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
     ENV.test.override = {
       base: 'http://localhost/data',
       context: 'http://localhost/farm.jsonld',
+      elasticsearch: 'http://localhost:9200/_search'
     }
   });
 
@@ -203,5 +204,78 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
       });
 
     }).then(() => assert.verifySteps(['post', 'save']));
+  });
+
+  test('query matching two cows', function(assert) {
+    let store = this.owner.lookup('service:store');
+
+    let query = {
+      'match' : { 'name' : 'bob'}
+    };
+
+    let es_result = {
+      "took" : 12,
+      "timed_out" : false,
+      "_shards" : {
+        "total" : 5,
+        "successful" : 5,
+        "skipped" : 0,
+        "failed" : 0
+      },
+      "hits" : {
+        "total" : 2,
+        "max_score" : 1.9924302,
+        "hits" : [{
+          "_index" : "pass",
+          "_type" : "_doc",
+          "_id" : "L2ZjcmVwby9yZXN0L2dyYW50cy9iOC82Mi9hNi9jNy9iODYyYTZjNy0wMzEyLTRjZWYtYjg1NC1iNDZmMGMzNWNhZWQ=",
+          "_score" : 1.9924302,
+          "_source" : {
+            "@id" : "http://localhost/data/kine/bob/1",
+            "@type" : "Cow",
+            "name" : "Bob",
+            "healthy": true
+          }
+        }, {
+          "_index" : "pass",
+          "_type" : "_doc",
+          "_id" : "L2ZjcmVwby9yZXN0L2dyYW50cy81Mi83Zi85Ny81Zi81MjdmOTc1Zi03MmNlLTQzYjEtYjJmNC0yM2EwMDhlN2FmOWY=",
+          "_score" : 1.7917595,
+          "_source" : {
+            "@id" : "http://localhost/data/kine/bob/1",
+            "@type" : "Cow",
+            "name" : "Bobby",
+            "healthy": false
+          }
+        }]
+      }
+    };
+
+    server = new Pretender(function() {
+      this.post('http://localhost:9200/_search', function(request) {
+        let query = request.requestBody;
+
+        assert.ok(JSON.parse(query).query);
+        assert.ok(query.includes('bob'));
+        assert.ok(query.includes('Cow'));
+
+        assert.step('post');
+
+        return [200, { "Content-Type": "application/json"}, JSON.stringify(es_result)];
+      });
+    });
+
+    return run(() => {
+      return store.query('cow', query);
+    }).then(result => {
+      assert.verifySteps(['post'])
+
+      assert.ok(result);
+      assert.equal(result.get('length'), 2);
+
+      result.forEach(cow => {
+        assert.equal(cow.get('constructor.modelName'), 'cow');
+      });
+    });
   });
 });
