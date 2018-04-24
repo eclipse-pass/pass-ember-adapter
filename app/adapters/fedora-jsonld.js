@@ -48,7 +48,7 @@ export default DS.Adapter.extend({
     };
 
     // Needed for cross-site support.
-    //options.xhrFields = {withCredentials: true};
+    options.xhrFields = {withCredentials: true};
 
     return $.ajax(options);
   },
@@ -72,6 +72,19 @@ export default DS.Adapter.extend({
     let result = this._delete(base).then(() => this._create(base));
 
     return result.then(() => RSVP.all(modelNames.map(name => this._create(this.buildURL(name)))));
+  },
+
+  // Return a Promise which deletes the specified Elasticsearch index
+  // and then recreates if with the given configuration.
+  setupElasticsearch(url, config) {
+    console.log('moooo  ' + url);
+
+    let create = () => this._ajax(url, 'PUT', {
+      headers: {'Content-Type': 'application/json'},
+      data: JSON.stringify(config)
+    });
+
+    return this._ajax(url, 'DELETE').then(create, create);
   },
 
   /**
@@ -203,12 +216,12 @@ export default DS.Adapter.extend({
 
   // Create an elasticsearch query that restricts the given query to the given type.
   // Add size and from from options if presents
-  _create_elasticsearch_query(query, type, options) {
+  _create_elasticsearch_query(query, jsonld_type, options) {
     let result = {
       query: {
         bool: {
           must: query,
-          filter: {term: {"@type": type.modelName}}
+          filter: {term: {'@type': jsonld_type}}
         }
       }
     };
@@ -239,7 +252,7 @@ export default DS.Adapter.extend({
 
     The query argument must be a clause in the Elasticsearch query syntax.
     See https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html.
-    The query argument is the subject of a must and then combined with a filter for the 
+    The query argument is the subject of a must and then combined with a filter for the
     given type.
 
     Each property of a model object is available as an Elasticsearch field. The type of
@@ -259,7 +272,10 @@ export default DS.Adapter.extend({
 
   query(store, type, query, options = {}) {
     let url = this.get('elasticsearchURI');
-    let data = this._create_elasticsearch_query(query, type, options);
+
+    let serializer = store.serializerFor(type.modelName);
+    let jsonld_type = serializer.serializeModelName(type.modelName);
+    let data = this._create_elasticsearch_query(query, jsonld_type, options);
 
     return this._ajax(url, 'POST', {
       data: JSON.stringify(data),
