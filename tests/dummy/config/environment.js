@@ -50,7 +50,8 @@ module.exports = function(environment) {
   // Test configuration for dummy app
   ENV.test = {
     base: 'http://localhost:8080/fcrepo/rest/farm',
-    elasticsearch: 'http://localhost:9200/pass/_search',
+    elasticsearch: 'http://localhost:9200/farm/_search',
+    elasticsearch_index: 'http://localhost:9200/farm/',
     context: 'https://raw.githubusercontent.com/OA-PASS/ember-fedora-adapter/master/tests/dummy/public/farm.jsonld',
     username: 'admin',
     password: 'moo',
@@ -59,6 +60,14 @@ module.exports = function(environment) {
 
   if (process.env.FEDORA_ADAPTER_BASE) {
     ENV.test.base = process.env.FEDORA_ADAPTER_BASE;
+  }
+
+  if (process.env.FEDORA_ADAPTER_ES_SEARCH) {
+    ENV.test.elasticsearch = process.env.FEDORA_ADAPTER_ES_SEARCH;
+  }
+
+  if (process.env.FEDORA_ADAPTER_ES_INDEX) {
+    ENV.test.elasticsearch_index = process.env.FEDORA_ADAPTER_ES_INDEX;
   }
 
   if (process.env.FEDORA_ADAPTER_CONTEXT) {
