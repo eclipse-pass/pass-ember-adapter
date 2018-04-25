@@ -52,7 +52,7 @@ module.exports = function(environment) {
     base: 'http://localhost:8080/fcrepo/rest/farm/',
     elasticsearch: 'http://localhost:9200/farm/_search',
     elasticsearch_index: 'http://localhost:9200/farm/',
-    context: 'https://raw.githubusercontent.com/OA-PASS/ember-fedora-adapter/master/tests/dummy/public/farm.jsonld',
+    context: 'http://example.com/farm/',
     username: 'admin',
     password: 'moo',
     integration: true
