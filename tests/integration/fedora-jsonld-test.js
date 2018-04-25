@@ -15,6 +15,11 @@ function integrationTest(name, stuff) {
     }
 }
 
+// Return a Promise that ways the given ms until resolving
+function delay(ms) {
+  return new RSVP.Promise(resolve => setTimeout(resolve, ms));
+}
+
 module('Integration | Adapter | fedora jsonld', function(hooks) {
   setupApplicationTest(hooks);
 
@@ -35,6 +40,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
             "weight": {"type": "integer"},
             "birthDate": {"type": "date"},
             "milkVolume": {"type": "float"},
+            "colors": {"type": "keyword"},
             "barn": {"type": "keyword"},
             "cows": {"type": "keyword"}
           }
@@ -44,6 +50,11 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
 
     return adapter.setupFedora(['cow', 'barn']).then(() =>
                     adapter.setupElasticsearch(es_index, config));
+  });
+
+  // Small delay to help indexer sync with Fedora and Elasticsearch
+  hooks.afterEach(function() {
+    return delay(1000);
   });
 
   integrationTest('findAll on empty type', function(assert) {
@@ -320,7 +331,8 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       assert.step('save');
 
       // Wait for record to be pushed to index
-    }).then(() => new RSVP.Promise((resolve) => setTimeout(resolve, 5000))).then(() => {
+      return delay(5000);
+    }).then(() => {
       assert.step('wait');
 
       return store.query('cow', query);
