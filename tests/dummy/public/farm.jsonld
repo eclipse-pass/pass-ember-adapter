@@ -9,7 +9,8 @@
     "healthy": {"@id": "farm:healthy"},
     "birthDate": {"@id": "farm:birthDate", "@type": "xsd:dateTime"},
     "name": {"@id": "farm:name"},
-    "milkVolume": {"@id": "farm:milkVolume"},    
+    "milkVolume": {"@id": "farm:milkVolume"},
+    "colors": {"@id": "farm:colors", "@container": "@set"},
     "weight": {"@id": "farm:weight"},
     "barn": {"@id": "farm:barn", "@type": "@id"},    
     "cows": {"@id": "farm:cows", "@container": "@set", "@type": "@id"}    
