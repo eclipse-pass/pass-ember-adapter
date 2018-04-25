@@ -179,6 +179,7 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
       weight: 124,
       healthy: false,
       milkVolume: 30.5,
+      colors: ['mauve'],
       birthDate: new Date(Date.UTC(80, 11, 1, 0, 0, 0))
     };
 
@@ -201,6 +202,7 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
         assert.equal(data.healthy, record.get('healthy'));
         assert.equal(data.milkVolume, record.get('milkVolume'));
         assert.equal(data.birthDate, record.get('birthDate'));
+        assert.equal(data.colors, record.get('colors'));
       });
 
     }).then(() => assert.verifySteps(['post', 'save']));

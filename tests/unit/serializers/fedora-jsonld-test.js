@@ -39,6 +39,37 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
     assert.deepEqual(result, expected);
   });
 
+  test('it serializes cow with array property', function(assert) {
+    let store = this.owner.lookup('service:store');
+
+    let data = {
+      name: 'bob',
+      weight: 120,
+      colors: ['teal', 'purple'],
+      healthy: false,
+      milkVolume: 1.5,
+      birthDate: new Date(Date.UTC(96, 11, 1, 0, 0, 0))
+    };
+
+    let record = run(() => store.createRecord('cow', data));
+
+    let expected = {
+      '@context': ENV.test.context,
+      '@id': '',
+      '@type': 'Cow',
+      name: data.name,
+      weight: data.weight,
+      colors: data.colors,
+      healthy: data.healthy,
+      milkVolume: data.milkVolume,
+      birthDate: data.birthDate.toISOString()
+    };
+
+    let result = record.serialize();
+
+    assert.deepEqual(result, expected);
+  });
+
   test('it serializes empty record', function(assert) {
     let store = this.owner.lookup('service:store');
     let record = run(() => store.createRecord('cow'));

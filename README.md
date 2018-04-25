@@ -18,7 +18,6 @@ This addon provides an adapter for interacting with the Fedora repository, http:
 
 * contextURI: The URI of the external JSON-LD context to load. Must be publicly accessible.
 
-
 ## Using the Fedora adapter
 
 The Fedora adapter requires a JSON-LD context corresponding to the models of the Ember application.
@@ -28,20 +27,22 @@ in the context as terms. By default an attribute or relationships name maps dire
 must be used consistently in all models. Some terms in the context require a type set, some do not. Whether or not an optional type is specified will
 oddly influence compaction, but will not affect the adapter.
 
+The string_array is an extension provided to handle arrays of strings. The adapter may not preserve the order of an array when an object is persisted.
 
 Attributes mapping:
 
-| Ember type | JSON-LD type             | Required |
-| ---------- | -------------            | -------- |
-| boolean    | xsd:boolean              | false    |
-| number     | xsd:integer, xsd:double  | false    |
-| string     | xsd:string               | false    |
-| date       | xsd:dateTime             | true     |
-| object     | Unsupported              |          |
+| Ember type   | JSON-LD type             | Required |
+| ------------ | -------------            | -------- |
+| boolean      | xsd:boolean              | false    |
+| number       | xsd:integer, xsd:double  | false    |
+| string       | xsd:string               | false    |
+| date         | xsd:dateTime             | true     |
+| string_array | @container: @set         | true     |
+| object       | Unsupported              |          |
 
 Relationship mapping:
 
-| Ember relationship | JSON-LD type           | Required | 
+| Ember relationship | JSON-LD type           | Required |
 | ------------------ | ------------           | -------- |
 | belongsTo          | @id                    | true     |
 | hasMany            | @container: @set, @id  | true     |
@@ -110,7 +111,7 @@ The only context processing is expansion of compact IRIs for property names and 
 This expansion only happens if the context is included. The default behavior is for Fedora to
 rather verbosely include context.
 
-The ember attribute type object (basic javasript object) is not supported. The Fedora single
+The ember attribute type object (basic Javasript object) is not supported. The Fedora single
 subject restriction would make support a bit awkward.
 
 Ember attribute transforms are not supported.

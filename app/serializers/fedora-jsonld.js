@@ -115,8 +115,22 @@ export default DS.Serializer.extend({
         }
 
         return value.toISOString();
-      case 'object':
-        throw 'Object attributes are not supported.';
+      case 'string_array':
+        if (!Array.isArray(value)) {
+            throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type
+                  + ' which must be array of strings for value ' + value;
+        }
+
+        value.forEach(el => {
+          let el_type = typeof el;
+
+          if (el_type != 'string') {
+            throw 'Array element type ' + el_type + ' not compatible with attribute type '
+                  + attr_type + ' which must be array of strings for value ' + value;
+          }
+        });
+
+        return value;
       default:
         throw 'Attribute type unsupported: ' + attr_type;
     }
@@ -148,8 +162,22 @@ export default DS.Serializer.extend({
       case 'date':
         // TODO Older browsers may not handle ISOString format.
         return new Date(Date.parse(value));
-      case 'object':
-        throw 'Object attributes are not supported.';
+      case 'string_array':
+        if (!Array.isArray(value)) {
+            throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type
+                  + ' which must be array of strings for value ' + value;
+        }
+
+        value.forEach(el => {
+          let el_type = typeof el;
+
+          if (el_type != 'string') {
+            throw 'Array element type ' + el_type + ' not compatible with attribute type '
+                  + attr_type + ' which must be array of strings for value ' + value;
+          }
+        });
+
+        return value;
       default:
         throw 'Attribute type unsupported: ' + attr_type;
     }
