@@ -7,7 +7,7 @@ services:
     container_name: fcrepo    
     env_file: .env
     environment:
-      - FCREPO_JMS_BASEURL=http://${FCREPO_HOST}:${FCREPO_PORT}/fcrepo/rest
+      - FCREPO_JMS_BASEURL=http://localhost:8080/fcrepo/rest
     ports: 
       - "${FCREPO_PORT}:${FCREPO_PORT}"
       - "${FCREPO_JMS_PORT}:${FCREPO_JMS_PORT}"
@@ -18,6 +18,10 @@ services:
     image: oapass/indexer
     container_name: indexer
     env_file: .env
+    links:
+      - fcrepo:localhost
+    volumes:
+      - ./.hosts:/etc/hosts:Z
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.3
