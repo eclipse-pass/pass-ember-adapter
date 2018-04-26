@@ -1,0 +1,18 @@
+{
+  "mappings": {
+    "_doc": {
+      "dynamic": false,
+      "properties": {
+        "@id": {"type": "keyword" },
+        "@type": {"type": "keyword"},
+        "name": {"type": "text"},
+        "weight": {"type": "integer"},
+        "birthDate": {"type": "date"},
+        "milkVolume": {"type": "float"},
+        "colors": {"type": "keyword"},
+        "barn": {"type": "keyword"},
+        "cows": {"type": "keyword"}
+      }
+    }
+  }
+}
