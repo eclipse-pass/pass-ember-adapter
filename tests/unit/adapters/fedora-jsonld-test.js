@@ -202,7 +202,7 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
         assert.equal(data.healthy, record.get('healthy'));
         assert.equal(data.milkVolume, record.get('milkVolume'));
         assert.equal(data.birthDate, record.get('birthDate'));
-        assert.equal(data.colors, record.get('colors'));
+        assert.deepEqual(data.colors, record.get('colors'));
       });
 
     }).then(() => assert.verifySteps(['post', 'save']));

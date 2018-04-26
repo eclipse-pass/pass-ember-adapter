@@ -6,6 +6,6 @@ export default DS.Model.extend({
   healthy: DS.attr('boolean'),
   birthDate: DS.attr('date'),
   milkVolume: DS.attr('number'),
-  colors: DS.attr('string_array'),
+  colors: DS.attr('set'),
   barn: DS.belongsTo('barn')
 });

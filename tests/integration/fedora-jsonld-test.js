@@ -128,6 +128,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       weight: 124,
       healthy: false,
       milkVolume: 30.5,
+      colors: ['blue'],
       birthDate: new Date(Date.UTC(80, 11, 1, 0, 0, 0))
     };
 
@@ -140,6 +141,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       assert.equal(record.get('weight'), data.weight);
       assert.equal(record.get('healthy'), data.healthy);
       assert.equal(record.get('milkVolume'), data.milkVolume);
+      assert.equal(record.get('colors'), data.colors);
       assert.equal(record.get('birthDate'), data.birthDate);
 
       return record.save().then(() => {
@@ -155,10 +157,10 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       }).then(cow => {
           assert.step('findRecord');
 
-
           assert.equal(cow.get('weight'), data.weight);
           assert.equal(cow.get('healthy'), data.healthy);
           assert.equal(cow.get('milkVolume'), data.milkVolume);
+          assert.deepEqual(cow.get('colors'), data.colors);
           assert.equal(cow.get('birthDate').toISOString(), data.birthDate.toISOString());
         });
     });
@@ -219,6 +221,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
     let cow_data = {
       name: 'icecream',
       weight: 890,
+      colors: [],
       birthDate: new Date()
     };
 
@@ -261,6 +264,10 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
 
           assert.equal(cow.get('name'), cow_data.name);
           assert.equal(cow.get('weight'), cow_data.weight);
+
+          // Empty set not expected to be persisted.
+          assert.notOk(cow.get('colors'));
+
           assert.equal(cow.get('birthDate').toISOString(), cow_data.birthDate.toISOString());
 
           return store.findRecord('barn', barn_id);
@@ -305,6 +312,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       name: 'Mooni',
       weight: 80,
       milkVolume: 100,
+      colors: ['red'],
       birthDate: new Date()
     };
 
@@ -336,6 +344,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       assert.equal(result.get('firstObject.milkVolume'), cow_data.milkVolume);
       assert.equal(result.get('firstObject.weight'), cow_data.weight);
       assert.equal(result.get('firstObject.birthDate'), cow_data.birthDate);
+      assert.deepEqual(result.get('firstObject.colors'), cow_data.colors);
 
     }).then(() => assert.verifySteps(['save', 'wait', 'query']));
   });

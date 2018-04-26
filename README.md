@@ -27,18 +27,20 @@ in the context as terms. By default an attribute or relationships name maps dire
 must be used consistently in all models. Some terms in the context require a type set, some do not. Whether or not an optional type is specified will
 oddly influence compaction, but will not affect the adapter.
 
-The string_array is an extension provided to handle arrays of strings. The adapter may not preserve the order of an array when an object is persisted.
+The set type is an extension provided to handle arrays of simple types like strings, numbers, and booleans.
+The adapter will not preserve the order of a set attribute when an object is persisted. The adapter will
+not persist an empty set.
 
 Attributes mapping:
 
-| Ember type   | JSON-LD type             | Required |
-| ------------ | -------------            | -------- |
-| boolean      | xsd:boolean              | false    |
-| number       | xsd:integer, xsd:double  | false    |
-| string       | xsd:string               | false    |
-| date         | xsd:dateTime             | true     |
-| string_array | @container: @set         | true     |
-| object       | Unsupported              |          |
+| Ember type | JSON-LD type            | Required |
+| -----------| ----------------------- | -------- |
+| boolean    | xsd:boolean             | false    |
+| number     | xsd:integer, xsd:double | false    |
+| string     | xsd:string              | false    |
+| date       | xsd:dateTime            | true     |
+| set        | @container: @set        | true     |
+| object     | Unsupported             |          |
 
 Relationship mapping:
 
@@ -58,6 +60,7 @@ export default DS.Model.extend({
   weight: DS.attr('number'),
   healthy: DS.attr('boolean'),
   birthDate: DS.attr('date'),
+  colors: DS.attr('set'),  
   milkVolume: DS.attr('number'),
   barn: DS.belongsTo('barn')
 });
@@ -87,7 +90,8 @@ Example JSON-LD context:
     "name": {"@id": "farm:name"},
     "milkVolume": {"@id": "farm:milkVolume", "@type": "xsd:double"},    
     "weight": {"@id": "farm:weight", "@type": "xsd:integer"},
-    "barn": {"@id": "farm:barn", "@type": "@id"},    
+    "barn": {"@id": "farm:barn", "@type": "@id"},
+    "colors": {"@id": "farm:colors", "@container": "@set"}    
     "cows": {"@id": "farm:cows", "@container": "@set", "@type": "@id"}
   }
 }
@@ -133,14 +137,12 @@ Ember attribute transforms are not supported.
 
 By default integration is turned on. It can be turned off by setting the enviroment variable FEDORA_ADAPTER_INTEGRATION_TEST to 0.
 
-The following envirment variables configure integration testing:
-* FEDORA_ADAPTER_BASE       (http://localhost:8080/rest/farm)
-* FEDORA_ADAPTER_CONTEXT    (Location of http://localhost:4200/farm.jsonld)
-* FEDORA_ADAPTER_USER_NAME  (Username to connect to Fedora)
-* FEDORA_ADAPTER_PASSWORD   (Password to connect to Fedora)
-* FEDORA_ADAPTER_INTEGRATION_TEST (Whether or not to run integration test: 1 by default, set to 0 to turn off)
+Docker containers which run Fedora, pass-indexer, and Elasticsearch must be configured in .env in order to run the integration tests.
 
-The file /tests/dummy/public/farm.jsonld must be publically available at FEDORA_ADAPTER_CONTEXT.
+By default the tests/dummy/public/farm.jsonld is configured to be used as the context for Fedora objects.
+The file .esindex.config is used to create an Elasticsearch index for those objects.
+The Fedora repository will be available on http://localhost:8080/fcrepo/rest with a username of admin and a password of moo.
+The Elasticsearch index will be available at http://localhost:9200/farm.
 
 ## Building
 
