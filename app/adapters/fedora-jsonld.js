@@ -74,15 +74,15 @@ export default DS.Adapter.extend({
     return result.then(() => RSVP.all(modelNames.map(name => this._create(this.buildURL(name)))));
   },
 
-  // Return a Promise which deletes the specified Elasticsearch index
-  // and then recreates if with the given configuration.
-  setupElasticsearch(url, config) {
-    let create = () => this._ajax(url, 'PUT', {
-      headers: {'Content-Type': 'application/json'},
-      data: JSON.stringify(config)
-    });
+  // Return a Promise which clears the specified Elasticsearch index
+  clearElasticsearch(index_url) {
+    let url = index_url + '_doc/_delete_by_query?conflicts=proceed&refresh';
+    let query =  {query: {match_all: {}}};
 
-    return this._ajax(url, 'DELETE').then(create, create);
+    return this._ajax(url, 'POST', {
+      headers: {'Content-Type': 'application/json'},
+      data: JSON.stringify(query)
+    });
   },
 
   /**
@@ -296,7 +296,7 @@ export default DS.Adapter.extend({
     if (base.endsWith('/')) {
       base = base.slice(0, base.length - 1);
     }
-      
+
     let url = [base];
 
     if (modelName) {

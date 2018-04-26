@@ -23,38 +23,28 @@ function delay(ms) {
 module('Integration | Adapter | fedora jsonld', function(hooks) {
   setupApplicationTest(hooks);
 
+  // Clear Fedora resources and Elasticsearch index for each test.
+  // Small delays help indexer sync with Fedora and Elasticsearch
+
+  hooks.beforeEach(function() {
+    return delay(3000);
+  });
+
   hooks.beforeEach(function() {
     let adapter = this.owner.lookup('adapter:application');
 
-    // Configure ES index for farm context
-    let es_index = ENV.test.elasticsearch_index;
-
-    let config = {
-      "mappings": {
-        "_doc": {
-          "dynamic": false,
-          "properties": {
-            "@id": {"type": "keyword" },
-            "@type": {"type": "keyword"},
-            "name": {"type": "text"},
-            "weight": {"type": "integer"},
-            "birthDate": {"type": "date"},
-            "milkVolume": {"type": "float"},
-            "colors": {"type": "keyword"},
-            "barn": {"type": "keyword"},
-            "cows": {"type": "keyword"}
-          }
-        }
-      }
-    };
-
-    return adapter.setupFedora(['cow', 'barn']).then(() =>
-                    adapter.setupElasticsearch(es_index, config));
+    return adapter.setupFedora(['cow', 'barn']);
   });
 
-  // Small delay to help indexer sync with Fedora and Elasticsearch
-  hooks.afterEach(function() {
-    return delay(1000);
+  hooks.beforeEach(function() {
+    return delay(3000);
+  });
+
+  hooks.beforeEach(function() {
+    let adapter = this.owner.lookup('adapter:application');
+    let es_index = ENV.test.elasticsearch_index;
+
+    return adapter.clearElasticsearch(es_index);
   });
 
   integrationTest('findAll on empty type', function(assert) {
@@ -331,7 +321,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       assert.step('save');
 
       // Wait for record to be pushed to index
-      return delay(5000);
+      return delay(3000);
     }).then(() => {
       assert.step('wait');
 
@@ -343,7 +333,9 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       assert.equal(result.get('length'), 1);
 
       assert.equal(result.get('firstObject.name'), cow_data.name);
-      //assert.equal(result.get('firstObject.milkVolume'), cow_data.milkVolume);
+      assert.equal(result.get('firstObject.milkVolume'), cow_data.milkVolume);
+      assert.equal(result.get('firstObject.weight'), cow_data.weight);
+      assert.equal(result.get('firstObject.birthDate'), cow_data.birthDate);
 
     }).then(() => assert.verifySteps(['save', 'wait', 'query']));
   });
