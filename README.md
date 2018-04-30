@@ -116,9 +116,53 @@ This expansion only happens if the context is included. The default behavior is 
 rather verbosely include context.
 
 The ember attribute type object (basic Javasript object) is not supported. The Fedora single
-subject restriction would make support a bit awkward.
+subject restriction would make support a bit awkward. Note that JSON arrays of simple types
+are suppoted with set.
 
 Ember attribute transforms are not supported.
+
+## Searching
+
+Store.query is implemented on top of Elasticsearch. Fedora must have been set up such
+that compacted Fedora objects are indexed in Elasticsearch. See https://github.com/OA-PASS/pass-indexer
+for an example.
+
+The query must be a clause in the Elasticsearch query syntax or an object containing that clause.
+See https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html. The clause
+is the subject of a must and then combined with a filter for the given type.
+The query argument can be the form: clause or
+    ```
+    {
+      query: clause,
+      from: number,
+      size: number,
+      info: object_ref
+    }
+    ```
+
+If the query argument has a 'query' key, the clause is taken
+to be the value of that key. If 'from' or 'size' keys are present in the
+query argument, they are used to modify what results are returned. If the
+'info' key is present, its value is an object reference upon which the 'total'
+key is set to the total number of matching results. Note that if the query
+argument is the clause, these optional keys can still be used.
+
+Each property of a model object is available as an Elasticsearch field. The type of
+field influences how it can be searched. Check the index configuration to find the types.
+
+Example of searching green barns and return 10 matches starting from 10.
+The info object has total set to the total number of matches.
+
+```
+store.query('barn', {term: {colors : 'green'}, from: 10, size: 10, info: info});
+```
+
+This is equivalent to the following query using the expanded syntax:
+
+```
+store.query('barn', {query: {term: {colors : 'green'}}, from: 10, size: 10, info: info});
+```
+
 
 ## Installation
 
