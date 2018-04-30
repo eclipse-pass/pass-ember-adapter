@@ -211,10 +211,6 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
   test('query matching two cows', function(assert) {
     let store = this.owner.lookup('service:store');
 
-    let query = {
-      'match' : { 'name' : 'bob'}
-    };
-
     let es_result = {
       "took" : 12,
       "timed_out" : false,
@@ -257,7 +253,14 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
       this.post('http://localhost:9200/_search', function(request) {
         let query = request.requestBody;
 
-        assert.ok(JSON.parse(query).query);
+        let o = JSON.parse(query);
+
+        // Check that the query looks ok.
+        assert.ok(o.query);
+        assert.ok(o.query.bool);
+        assert.ok(o.query.bool.must);
+        assert.ok(o.query.bool.filter);
+
         assert.ok(query.includes('bob'));
         assert.ok(query.includes('Cow'));
 
@@ -267,13 +270,65 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
       });
     });
 
+    let info = {};
+
     return run(() => {
+      // Try a simple query
+
+      let query = {
+        match: {name: 'bob'}
+      };
+
       return store.query('cow', query);
     }).then(result => {
       assert.verifySteps(['post'])
 
-      assert.ok(result);
+      assert.ok(result, "query 1 ok");
       assert.equal(result.get('length'), 2);
+
+      result.forEach(cow => {
+        assert.equal(cow.get('constructor.modelName'), 'cow');
+      });
+
+      // Try a query with from, size, and info
+
+      let query = {
+        match: {name: 'bob'},
+        from: 0,
+        size: 100,
+        info: info
+      };
+
+      return store.query('cow', query);
+    }).then(result => {
+      assert.verifySteps(['post'])
+
+      assert.ok(result, "query 2 ok");
+      assert.equal(result.get('length'), 2);
+      assert.equal(info.total, 2);
+
+      result.forEach(cow => {
+        assert.equal(cow.get('constructor.modelName'), 'cow');
+      });
+
+      // Try the query clause separated out
+
+      let query = {
+        query: {match: {name: 'bob'}},
+        from: 10,
+        size: 30,
+        info: info
+      };
+
+      info.total = 0;
+
+      return store.query('cow', query);
+    }).then(result => {
+      assert.verifySteps(['post'])
+
+      assert.ok(result, "query 3 ok");
+      assert.equal(result.get('length'), 2);
+      assert.equal(info.total, 2);
 
       result.forEach(cow => {
         assert.equal(cow.get('constructor.modelName'), 'cow');

@@ -214,31 +214,41 @@ export default DS.Adapter.extend({
 
   // Create an elasticsearch query that restricts the given query to the given type.
   // Add size and from from options if presents
-  _create_elasticsearch_query(query, jsonld_type, options) {
-    let result = {
-      query: {
-        bool: {
-          must: query,
-          filter: {term: {'@type': jsonld_type}}
-        }
+  _create_elasticsearch_query(query, jsonld_type) {
+    let result = {};
+    let clause = Object.assign({}, query);
+
+    if ('size' in clause) {
+      result.size = query.size;
+      delete clause.size;
+    }
+
+    if ('from' in clause) {
+      result.from = query.from;
+      delete clause.from;
+    }
+
+    if ('query' in clause) {
+      clause = clause.query;
+    }
+
+    result.query = {
+      bool: {
+        must: clause,
+        filter: {term: {'@type': jsonld_type}}
       }
     };
-
-    if (options.size) {
-      result['size'] = options.size;
-    }
-
-    if (options.from) {
-      result['from'] = options.from;
-    }
-
-    //console.log(result);
 
     return result;
   },
 
   // Turn Elasticsearch results into a JSON-LD @graph suitable for normalizeResponse.
-  _parse_elasticsearch_result(result) {
+  // Return metadata about the search through info object.
+  _parse_elasticsearch_result(result, info) {
+    if (info) {
+      info.total = result.hits.total;
+    }
+
     return {
       '@graph': result.hits.hits.map(hit => hit._source)
     };
@@ -248,18 +258,30 @@ export default DS.Adapter.extend({
     Called by the store in order to fetch an array of records that match an
     Elasticsearch query.
 
-    The query argument must be a clause in the Elasticsearch query syntax.
+    The query must be a clause in the Elasticsearch query syntax or an object
+    containing that clause.
     See https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html.
-    The query argument is the subject of a must and then combined with a filter for the
+    The clause is the subject of a must and then combined with a filter for the
     given type.
+
+    The query argument can be the form: clause or
+    {
+      query: clause,
+      from: number,
+      size: number,
+      info: object_ref
+    }.
+
+    If the query argument has a 'query' key, the clause is taken
+    to be the value of that key. If 'from' or 'size' keys are present in the
+    query argument, they are used to modify what results are returned. If the
+    'info' key is present, its value is an object reference upon which the 'total'
+    key is set to the total number of matching results. Note that if the query
+    argument is the clause, these optional keys can still be used.
 
     Each property of a model object is available as an Elasticsearch field. The type of
     field influences how it can be searched. Check the index configuration to find the
     types.
-
-    Options:
-      size - how many matching records to return
-      from - offset into total list of matching records
 
     @method query
     @param {DS.Store} store
@@ -268,17 +290,23 @@ export default DS.Adapter.extend({
     @return {Promise} promise
   */
 
-  query(store, type, query, options = {}) {
+  query(store, type, query) {
     let url = this.get('elasticsearchURI');
-
     let serializer = store.serializerFor(type.modelName);
     let jsonld_type = serializer.serializeModelName(type.modelName);
-    let data = this._create_elasticsearch_query(query, jsonld_type, options);
+
+    let info = query.info;
+
+    if (info) {
+      delete query.info;
+    }
+
+    let data = this._create_elasticsearch_query(query, jsonld_type);
 
     return this._ajax(url, 'POST', {
       data: JSON.stringify(data),
       headers: {'Content-Type': 'application/json; charset=utf-8'},
-    }).then(result => this._parse_elasticsearch_result(result));
+    }).then(result => this._parse_elasticsearch_result(result, info));
   },
 
   // Return the path relative to the adapter root in the Fedora repository

@@ -27,7 +27,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
   // Small delays help indexer sync with Fedora and Elasticsearch
 
   hooks.beforeEach(function() {
-    return delay(3000);
+    return delay(4000);
   });
 
   hooks.beforeEach(function() {
@@ -37,7 +37,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
   });
 
   hooks.beforeEach(function() {
-    return delay(3000);
+    return delay(4000);
   });
 
   hooks.beforeEach(function() {
@@ -346,6 +346,65 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       assert.equal(result.get('firstObject.birthDate'), cow_data.birthDate);
       assert.deepEqual(result.get('firstObject.colors'), cow_data.colors);
 
+    }).then(() => assert.verifySteps(['save', 'wait', 'query']));
+  });
+
+  // Persist three barns and test from, size, and info when doing a query
+  integrationTest('query with from and limit', function(assert) {
+    let store = this.owner.lookup('service:store');
+
+    let barn1_data = {
+      name: 'barn one',
+      colors: ['pink', 'green']
+    };
+
+    let barn2_data = {
+      name: 'barn two',
+      colors: ['red', 'green']
+    };
+
+    let barn3_data = {
+      name: 'barn three',
+      colors: ['blue', 'green']
+    };
+
+    let info = {};
+
+    return run(() => {
+      return store.createRecord('barn', barn1_data).save();
+    }).then(() => {
+      return store.createRecord('barn', barn2_data).save();
+    }).then(() => {
+      return store.createRecord('barn', barn3_data).save();
+    }).then(() => {
+      assert.step('save');
+
+      // Wait for barns to be indexed
+      return delay(5000);
+    }).then(() => {
+      assert.step('wait');
+      return store.query('barn', {term: {colors: 'green'}});
+    }).then(result => {
+      assert.step('query');
+
+      assert.ok(result);
+      assert.equal(result.get('length'), 3);
+
+      return store.query('barn', {term: {colors : 'green'}, size: 2});
+    }).then(result => {
+      assert.ok(result);
+      assert.equal(result.get('length'), 2);
+
+      return store.query('barn', {term: {colors : 'green'}, from: 1, size: 2});
+    }).then(result => {
+      assert.ok(result);
+      assert.equal(result.get('length'), 2);
+
+      return store.query('barn', {query: {term: {colors : 'green'}}, from: 2, size: 1, info: info});
+    }).then(result => {
+      assert.ok(result);
+      assert.equal(result.get('length'), 1);
+      assert.equal(info.total, 3);
     }).then(() => assert.verifySteps(['save', 'wait', 'query']));
   });
 });
