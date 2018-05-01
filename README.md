@@ -10,13 +10,15 @@ This addon provides an adapter for interacting with the Fedora repository, http:
 
 ### Adapter
 
-* baseURI: Absolute URI to Fedora container which will host Ember data
+* baseURI: Absolute URI to Fedora container which will host Ember data.
+* elasticsearchURI: Absolute URI to Elasticsearch search service.
 * username: If set, used to generate HTTP Basic authorization header.
 * password: If set, used to generate HTTP Basic authorization header.
 
 ### Serializer
 
 * contextURI: The URI of the external JSON-LD context to load. Must be publicly accessible.
+* dataURI: The URI use to make statements about PASS objects.
 
 ## Using the Fedora adapter
 
