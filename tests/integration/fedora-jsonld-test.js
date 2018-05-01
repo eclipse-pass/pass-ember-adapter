@@ -2,6 +2,7 @@ import { module, test, skip } from 'qunit';
 import { setupApplicationTest } from 'ember-qunit';
 import { run } from "@ember/runloop";
 import ENV from 'dummy/config/environment';
+import RSVP from 'rsvp';
 
 // Test the Fedora JSON-LD adapter hitting a live Fedora instance
 
@@ -14,13 +15,36 @@ function integrationTest(name, stuff) {
     }
 }
 
+// Return a Promise that ways the given ms until resolving
+function delay(ms) {
+  return new RSVP.Promise(resolve => setTimeout(resolve, ms));
+}
+
 module('Integration | Adapter | fedora jsonld', function(hooks) {
   setupApplicationTest(hooks);
+
+  // Clear Fedora resources and Elasticsearch index for each test.
+  // Small delays help indexer sync with Fedora and Elasticsearch
+
+  hooks.beforeEach(function() {
+    return delay(4000);
+  });
 
   hooks.beforeEach(function() {
     let adapter = this.owner.lookup('adapter:application');
 
     return adapter.setupFedora(['cow', 'barn']);
+  });
+
+  hooks.beforeEach(function() {
+    return delay(4000);
+  });
+
+  hooks.beforeEach(function() {
+    let adapter = this.owner.lookup('adapter:application');
+    let es_index = ENV.test.elasticsearch_index;
+
+    return adapter.clearElasticsearch(es_index);
   });
 
   integrationTest('findAll on empty type', function(assert) {
@@ -104,6 +128,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       weight: 124,
       healthy: false,
       milkVolume: 30.5,
+      colors: ['blue'],
       birthDate: new Date(Date.UTC(80, 11, 1, 0, 0, 0))
     };
 
@@ -116,6 +141,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       assert.equal(record.get('weight'), data.weight);
       assert.equal(record.get('healthy'), data.healthy);
       assert.equal(record.get('milkVolume'), data.milkVolume);
+      assert.equal(record.get('colors'), data.colors);
       assert.equal(record.get('birthDate'), data.birthDate);
 
       return record.save().then(() => {
@@ -131,10 +157,10 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       }).then(cow => {
           assert.step('findRecord');
 
-
           assert.equal(cow.get('weight'), data.weight);
           assert.equal(cow.get('healthy'), data.healthy);
           assert.equal(cow.get('milkVolume'), data.milkVolume);
+          assert.deepEqual(cow.get('colors'), data.colors);
           assert.equal(cow.get('birthDate').toISOString(), data.birthDate.toISOString());
         });
     });
@@ -195,6 +221,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
     let cow_data = {
       name: 'icecream',
       weight: 890,
+      colors: [],
       birthDate: new Date()
     };
 
@@ -237,6 +264,10 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
 
           assert.equal(cow.get('name'), cow_data.name);
           assert.equal(cow.get('weight'), cow_data.weight);
+
+          // Empty set not expected to be persisted.
+          assert.notOk(cow.get('colors'));
+
           assert.equal(cow.get('birthDate').toISOString(), cow_data.birthDate.toISOString());
 
           return store.findRecord('barn', barn_id);
@@ -272,5 +303,108 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
     return result.then(() => {
       assert.verifySteps(['cow save', 'barn save', 'cow findRecord', 'barn findRecord'])
     });
+  });
+
+  integrationTest('simple query for a cow', function(assert) {
+    let store = this.owner.lookup('service:store');
+
+    let cow_data = {
+      name: 'Mooni',
+      weight: 80,
+      milkVolume: 100,
+      colors: ['red'],
+      birthDate: new Date()
+    };
+
+    let query = {
+      'match' : { 'name' : cow_data.name}
+    };
+
+    return run(() => {
+      let cow_record = store.createRecord('cow', cow_data);
+      assert.ok(cow_record);
+
+      return cow_record.save();
+    }).then(() => {
+      assert.step('save');
+
+      // Wait for record to be pushed to index
+      return delay(3000);
+    }).then(() => {
+      assert.step('wait');
+
+      return store.query('cow', query);
+    }).then(result => {
+      assert.step('query');
+
+      assert.ok(result);
+      assert.equal(result.get('length'), 1);
+
+      assert.equal(result.get('firstObject.name'), cow_data.name);
+      assert.equal(result.get('firstObject.milkVolume'), cow_data.milkVolume);
+      assert.equal(result.get('firstObject.weight'), cow_data.weight);
+      assert.equal(result.get('firstObject.birthDate'), cow_data.birthDate);
+      assert.deepEqual(result.get('firstObject.colors'), cow_data.colors);
+
+    }).then(() => assert.verifySteps(['save', 'wait', 'query']));
+  });
+
+  // Persist three barns and test from, size, and info when doing a query
+  integrationTest('query with from and limit', function(assert) {
+    let store = this.owner.lookup('service:store');
+
+    let barn1_data = {
+      name: 'barn one',
+      colors: ['pink', 'green']
+    };
+
+    let barn2_data = {
+      name: 'barn two',
+      colors: ['red', 'green']
+    };
+
+    let barn3_data = {
+      name: 'barn three',
+      colors: ['blue', 'green']
+    };
+
+    let info = {};
+
+    return run(() => {
+      return store.createRecord('barn', barn1_data).save();
+    }).then(() => {
+      return store.createRecord('barn', barn2_data).save();
+    }).then(() => {
+      return store.createRecord('barn', barn3_data).save();
+    }).then(() => {
+      assert.step('save');
+
+      // Wait for barns to be indexed
+      return delay(5000);
+    }).then(() => {
+      assert.step('wait');
+      return store.query('barn', {term: {colors: 'green'}});
+    }).then(result => {
+      assert.step('query');
+
+      assert.ok(result);
+      assert.equal(result.get('length'), 3);
+
+      return store.query('barn', {term: {colors : 'green'}, size: 2});
+    }).then(result => {
+      assert.ok(result);
+      assert.equal(result.get('length'), 2);
+
+      return store.query('barn', {term: {colors : 'green'}, from: 1, size: 2});
+    }).then(result => {
+      assert.ok(result);
+      assert.equal(result.get('length'), 2);
+
+      return store.query('barn', {query: {term: {colors : 'green'}}, from: 2, size: 1, info: info});
+    }).then(result => {
+      assert.ok(result);
+      assert.equal(result.get('length'), 1);
+      assert.equal(info.total, 3);
+    }).then(() => assert.verifySteps(['save', 'wait', 'query']));
   });
 });

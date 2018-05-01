@@ -18,7 +18,6 @@ This addon provides an adapter for interacting with the Fedora repository, http:
 
 * contextURI: The URI of the external JSON-LD context to load. Must be publicly accessible.
 
-
 ## Using the Fedora adapter
 
 The Fedora adapter requires a JSON-LD context corresponding to the models of the Ember application.
@@ -28,20 +27,24 @@ in the context as terms. By default an attribute or relationships name maps dire
 must be used consistently in all models. Some terms in the context require a type set, some do not. Whether or not an optional type is specified will
 oddly influence compaction, but will not affect the adapter.
 
+The set type is an extension provided to handle arrays of simple types like strings, numbers, and booleans.
+The adapter will not preserve the order of a set attribute when an object is persisted. The adapter will
+not persist an empty set.
 
 Attributes mapping:
 
-| Ember type | JSON-LD type             | Required |
-| ---------- | -------------            | -------- |
-| boolean    | xsd:boolean              | false    |
-| number     | xsd:integer, xsd:double  | false    |
-| string     | xsd:string               | false    |
-| date       | xsd:dateTime             | true     |
-| object     | Unsupported              |          |
+| Ember type | JSON-LD type            | Required |
+| -----------| ----------------------- | -------- |
+| boolean    | xsd:boolean             | false    |
+| number     | xsd:integer, xsd:double | false    |
+| string     | xsd:string              | false    |
+| date       | xsd:dateTime            | true     |
+| set        | @container: @set        | true     |
+| object     | Unsupported             |          |
 
 Relationship mapping:
 
-| Ember relationship | JSON-LD type           | Required | 
+| Ember relationship | JSON-LD type           | Required |
 | ------------------ | ------------           | -------- |
 | belongsTo          | @id                    | true     |
 | hasMany            | @container: @set, @id  | true     |
@@ -57,6 +60,7 @@ export default DS.Model.extend({
   weight: DS.attr('number'),
   healthy: DS.attr('boolean'),
   birthDate: DS.attr('date'),
+  colors: DS.attr('set'),  
   milkVolume: DS.attr('number'),
   barn: DS.belongsTo('barn')
 });
@@ -86,7 +90,8 @@ Example JSON-LD context:
     "name": {"@id": "farm:name"},
     "milkVolume": {"@id": "farm:milkVolume", "@type": "xsd:double"},    
     "weight": {"@id": "farm:weight", "@type": "xsd:integer"},
-    "barn": {"@id": "farm:barn", "@type": "@id"},    
+    "barn": {"@id": "farm:barn", "@type": "@id"},
+    "colors": {"@id": "farm:colors", "@container": "@set"}    
     "cows": {"@id": "farm:cows", "@container": "@set", "@type": "@id"}
   }
 }
@@ -110,10 +115,54 @@ The only context processing is expansion of compact IRIs for property names and 
 This expansion only happens if the context is included. The default behavior is for Fedora to
 rather verbosely include context.
 
-The ember attribute type object (basic javasript object) is not supported. The Fedora single
-subject restriction would make support a bit awkward.
+The ember attribute type object (basic Javasript object) is not supported. The Fedora single
+subject restriction would make support a bit awkward. Note that JSON arrays of simple types
+are suppoted with set.
 
 Ember attribute transforms are not supported.
+
+## Searching
+
+Store.query is implemented on top of Elasticsearch. Fedora must have been set up such
+that compacted Fedora objects are indexed in Elasticsearch. See https://github.com/OA-PASS/pass-indexer
+for an example.
+
+The query must be a clause in the Elasticsearch query syntax or an object containing that clause.
+See https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html. The clause
+is the subject of a must and then combined with a filter for the given type.
+The query argument can be the form: clause or
+    ```
+    {
+      query: clause,
+      from: number,
+      size: number,
+      info: object_ref
+    }
+    ```
+
+If the query argument has a 'query' key, the clause is taken
+to be the value of that key. If 'from' or 'size' keys are present in the
+query argument, they are used to modify what results are returned. If the
+'info' key is present, its value is an object reference upon which the 'total'
+key is set to the total number of matching results. Note that if the query
+argument is the clause, these optional keys can still be used.
+
+Each property of a model object is available as an Elasticsearch field. The type of
+field influences how it can be searched. Check the index configuration to find the types.
+
+Example of searching green barns and return 10 matches starting from 10.
+The info object has total set to the total number of matches.
+
+```
+store.query('barn', {term: {colors : 'green'}, from: 10, size: 10, info: info});
+```
+
+This is equivalent to the following query using the expanded syntax:
+
+```
+store.query('barn', {query: {term: {colors : 'green'}}, from: 10, size: 10, info: info});
+```
+
 
 ## Installation
 
@@ -132,14 +181,12 @@ Ember attribute transforms are not supported.
 
 By default integration is turned on. It can be turned off by setting the enviroment variable FEDORA_ADAPTER_INTEGRATION_TEST to 0.
 
-The following envirment variables configure integration testing:
-* FEDORA_ADAPTER_BASE       (http://localhost:8080/rest/farm)
-* FEDORA_ADAPTER_CONTEXT    (Location of http://localhost:4200/farm.jsonld)
-* FEDORA_ADAPTER_USER_NAME  (Username to connect to Fedora)
-* FEDORA_ADAPTER_PASSWORD   (Password to connect to Fedora)
-* FEDORA_ADAPTER_INTEGRATION_TEST (Whether or not to run integration test: 1 by default, set to 0 to turn off)
+Docker containers which run Fedora, pass-indexer, and Elasticsearch must be configured in .env in order to run the integration tests.
 
-The file /tests/dummy/public/farm.jsonld must be publically available at FEDORA_ADAPTER_CONTEXT.
+By default the tests/dummy/public/farm.jsonld is configured to be used as the context for Fedora objects.
+The file .esindex.config is used to create an Elasticsearch index for those objects.
+The Fedora repository will be available on http://localhost:8080/fcrepo/rest with a username of admin and a password of moo.
+The Elasticsearch index will be available at http://localhost:9200/farm.
 
 ## Building
 

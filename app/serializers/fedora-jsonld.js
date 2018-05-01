@@ -8,6 +8,8 @@ import { classify } from '@ember/string';
 //   dataURI: URI used for JSON-LD properties.
 
 export default DS.Serializer.extend({
+  // Allowed set element types
+  SET_ELEMENT_TYPES: ['number', 'boolean', 'string'],
 
   // TODO Add mechanism to specify id <-> fedora uri mapping
   // Make default prettier. Perhaps just remove base uri, maybe base64 encode?
@@ -115,8 +117,22 @@ export default DS.Serializer.extend({
         }
 
         return value.toISOString();
-      case 'object':
-        throw 'Object attributes are not supported.';
+      case 'set':
+        if (!Array.isArray(value)) {
+            throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type
+                  + ' which must be array of simple types for value ' + value;
+        }
+
+        value.forEach(el => {
+          let el_type = typeof el;
+
+          if (!this.SET_ELEMENT_TYPES.includes(el_type)) {
+            throw 'Array element type ' + el_type + ' not compatible with attribute type '
+                  + attr_type + ' which must be array of simple types for value ' + value;
+          }
+        });
+
+        return value;
       default:
         throw 'Attribute type unsupported: ' + attr_type;
     }
@@ -148,8 +164,22 @@ export default DS.Serializer.extend({
       case 'date':
         // TODO Older browsers may not handle ISOString format.
         return new Date(Date.parse(value));
-      case 'object':
-        throw 'Object attributes are not supported.';
+      case 'set':
+        if (!Array.isArray(value)) {
+            throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type
+                  + ' which must be array of simple types for value ' + value;
+        }
+
+        value.forEach(el => {
+          let el_type = typeof el;
+
+          if (!this.SET_ELEMENT_TYPES.includes(el_type)) {
+            throw 'Array element type ' + el_type + ' not compatible with attribute type '
+                  + attr_type + ' which must be array of simple types for value ' + value;
+          }
+        });
+
+        return value;
       default:
         throw 'Attribute type unsupported: ' + attr_type;
     }

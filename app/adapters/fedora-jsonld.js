@@ -10,6 +10,7 @@ const JSON_LD_INCLUDE_PREFER_HEADER = 'return=representation; omit="http://fedor
 
 // Configuration properties:
 //   baseURI: Absolute URI of Fedora container used to store data.
+//   elasticsearchURI: Absolute URI of Elasticsearch search service.
 //   username: Usernmae to use for HTTP Basic.
 //   password: Password to use for HTTP Basic
 
@@ -71,6 +72,17 @@ export default DS.Adapter.extend({
     let result = this._delete(base).then(() => this._create(base));
 
     return result.then(() => RSVP.all(modelNames.map(name => this._create(this.buildURL(name)))));
+  },
+
+  // Return a Promise which clears the specified Elasticsearch index
+  clearElasticsearch(index_url) {
+    let url = index_url + '_doc/_delete_by_query?conflicts=proceed&refresh';
+    let query =  {query: {match_all: {}}};
+
+    return this._ajax(url, 'POST', {
+      headers: {'Content-Type': 'application/json'},
+      data: JSON.stringify(query)
+    });
   },
 
   /**
@@ -200,9 +212,76 @@ export default DS.Adapter.extend({
     });
   },
 
+  // Create an elasticsearch query that restricts the given query to the given type.
+  // Add size and from from options if presents
+  _create_elasticsearch_query(query, jsonld_type) {
+    let result = {};
+    let clause = Object.assign({}, query);
+
+    if ('size' in clause) {
+      result.size = query.size;
+      delete clause.size;
+    }
+
+    if ('from' in clause) {
+      result.from = query.from;
+      delete clause.from;
+    }
+
+    if ('query' in clause) {
+      clause = clause.query;
+    }
+
+    result.query = {
+      bool: {
+        must: clause,
+        filter: {term: {'@type': jsonld_type}}
+      }
+    };
+
+    return result;
+  },
+
+  // Turn Elasticsearch results into a JSON-LD @graph suitable for normalizeResponse.
+  // Return metadata about the search through info object.
+  _parse_elasticsearch_result(result, info) {
+    if (info) {
+      info.total = result.hits.total;
+    }
+
+    return {
+      '@graph': result.hits.hits.map(hit => hit._source)
+    };
+  },
+
  /**
-    Called by the store in order to fetch a JSON array for
-    the records that match a particular query.
+    Called by the store in order to fetch an array of records that match an
+    Elasticsearch query.
+
+    The query must be a clause in the Elasticsearch query syntax or an object
+    containing that clause.
+    See https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html.
+    The clause is the subject of a must and then combined with a filter for the
+    given type.
+
+    The query argument can be the form: clause or
+    {
+      query: clause,
+      from: number,
+      size: number,
+      info: object_ref
+    }.
+
+    If the query argument has a 'query' key, the clause is taken
+    to be the value of that key. If 'from' or 'size' keys are present in the
+    query argument, they are used to modify what results are returned. If the
+    'info' key is present, its value is an object reference upon which the 'total'
+    key is set to the total number of matching results. Note that if the query
+    argument is the clause, these optional keys can still be used.
+
+    Each property of a model object is available as an Elasticsearch field. The type of
+    field influences how it can be searched. Check the index configuration to find the
+    types.
 
     @method query
     @param {DS.Store} store
@@ -210,9 +289,24 @@ export default DS.Adapter.extend({
     @param {Object} query
     @return {Promise} promise
   */
-  // eslint-disable-next-line no-unused-vars
+
   query(store, type, query) {
-    throw "Query is unsupported."
+    let url = this.get('elasticsearchURI');
+    let serializer = store.serializerFor(type.modelName);
+    let jsonld_type = serializer.serializeModelName(type.modelName);
+
+    let info = query.info;
+
+    if (info) {
+      delete query.info;
+    }
+
+    let data = this._create_elasticsearch_query(query, jsonld_type);
+
+    return this._ajax(url, 'POST', {
+      data: JSON.stringify(data),
+      headers: {'Content-Type': 'application/json; charset=utf-8'},
+    }).then(result => this._parse_elasticsearch_result(result, info));
   },
 
   // Return the path relative to the adapter root in the Fedora repository
@@ -228,7 +322,7 @@ export default DS.Adapter.extend({
     let base = this.get('baseURI');
 
     if (base.endsWith('/')) {
-      base = base.slice(-1);
+      base = base.slice(0, base.length - 1);
     }
 
     let url = [base];

@@ -20,6 +20,7 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
     ENV.test.override = {
       base: 'http://localhost/data',
       context: 'http://localhost/farm.jsonld',
+      elasticsearch: 'http://localhost:9200/_search'
     }
   });
 
@@ -178,6 +179,7 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
       weight: 124,
       healthy: false,
       milkVolume: 30.5,
+      colors: ['mauve'],
       birthDate: new Date(Date.UTC(80, 11, 1, 0, 0, 0))
     };
 
@@ -200,8 +202,137 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
         assert.equal(data.healthy, record.get('healthy'));
         assert.equal(data.milkVolume, record.get('milkVolume'));
         assert.equal(data.birthDate, record.get('birthDate'));
+        assert.deepEqual(data.colors, record.get('colors'));
       });
 
     }).then(() => assert.verifySteps(['post', 'save']));
+  });
+
+  test('query matching two cows', function(assert) {
+    let store = this.owner.lookup('service:store');
+
+    let es_result = {
+      "took" : 12,
+      "timed_out" : false,
+      "_shards" : {
+        "total" : 5,
+        "successful" : 5,
+        "skipped" : 0,
+        "failed" : 0
+      },
+      "hits" : {
+        "total" : 2,
+        "max_score" : 1.9924302,
+        "hits" : [{
+          "_index" : "pass",
+          "_type" : "_doc",
+          "_id" : "L2ZjcmVwby9yZXN0L2dyYW50cy9iOC82Mi9hNi9jNy9iODYyYTZjNy0wMzEyLTRjZWYtYjg1NC1iNDZmMGMzNWNhZWQ=",
+          "_score" : 1.9924302,
+          "_source" : {
+            "@id" : "http://localhost/data/kine/bob/1",
+            "@type" : "Cow",
+            "name" : "Bob",
+            "healthy": true
+          }
+        }, {
+          "_index" : "pass",
+          "_type" : "_doc",
+          "_id" : "L2ZjcmVwby9yZXN0L2dyYW50cy81Mi83Zi85Ny81Zi81MjdmOTc1Zi03MmNlLTQzYjEtYjJmNC0yM2EwMDhlN2FmOWY=",
+          "_score" : 1.7917595,
+          "_source" : {
+            "@id" : "http://localhost/data/kine/bob/1",
+            "@type" : "Cow",
+            "name" : "Bobby",
+            "healthy": false
+          }
+        }]
+      }
+    };
+
+    server = new Pretender(function() {
+      this.post('http://localhost:9200/_search', function(request) {
+        let query = request.requestBody;
+
+        let o = JSON.parse(query);
+
+        // Check that the query looks ok.
+        assert.ok(o.query);
+        assert.ok(o.query.bool);
+        assert.ok(o.query.bool.must);
+        assert.ok(o.query.bool.filter);
+
+        assert.ok(query.includes('bob'));
+        assert.ok(query.includes('Cow'));
+
+        assert.step('post');
+
+        return [200, { "Content-Type": "application/json"}, JSON.stringify(es_result)];
+      });
+    });
+
+    let info = {};
+
+    return run(() => {
+      // Try a simple query
+
+      let query = {
+        match: {name: 'bob'}
+      };
+
+      return store.query('cow', query);
+    }).then(result => {
+      assert.verifySteps(['post'])
+
+      assert.ok(result, "query 1 ok");
+      assert.equal(result.get('length'), 2);
+
+      result.forEach(cow => {
+        assert.equal(cow.get('constructor.modelName'), 'cow');
+      });
+
+      // Try a query with from, size, and info
+
+      let query = {
+        match: {name: 'bob'},
+        from: 0,
+        size: 100,
+        info: info
+      };
+
+      return store.query('cow', query);
+    }).then(result => {
+      assert.verifySteps(['post'])
+
+      assert.ok(result, "query 2 ok");
+      assert.equal(result.get('length'), 2);
+      assert.equal(info.total, 2);
+
+      result.forEach(cow => {
+        assert.equal(cow.get('constructor.modelName'), 'cow');
+      });
+
+      // Try the query clause separated out
+
+      let query = {
+        query: {match: {name: 'bob'}},
+        from: 10,
+        size: 30,
+        info: info
+      };
+
+      info.total = 0;
+
+      return store.query('cow', query);
+    }).then(result => {
+      assert.verifySteps(['post'])
+
+      assert.ok(result, "query 3 ok");
+      assert.equal(result.get('length'), 2);
+      assert.equal(info.total, 2);
+
+      result.forEach(cow => {
+        assert.equal(cow.get('constructor.modelName'), 'cow');
+      });
+    });
   });
 });

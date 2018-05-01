@@ -44,7 +44,7 @@ before_install:
 before_script:
   - docker-compose pull
   - docker-compose up -d
-  - bash .fedora-wait.sh
+  - bash .wait.sh
   - docker-compose ps
   
 script:
