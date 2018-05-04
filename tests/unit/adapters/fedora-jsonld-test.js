@@ -118,12 +118,12 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
         return [200, { "Content-Type": "plain/text", "Location": cow_id }, cow_id];
       });
 
-      this.put('http://localhost/data/kine/123', function() {
+      this.patch('http://localhost/data/kine/123', function() {
         assert.step('put cow');
         return [200, { "Content-Type": "plain/text" }, ''];
       });
 
-      this.put('http://localhost/data/barns/a/b/21', function() {
+      this.patch('http://localhost/data/barns/a/b/21', function() {
         assert.step('put barn');
         return [200, { "Content-Type": "plain/text" }, ''];
       });
