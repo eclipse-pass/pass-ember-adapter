@@ -170,6 +170,60 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
     });
   });
 
+  // Show that JSON Merge is working.
+  integrationTest('update a cow', function(assert) {
+    let store = this.owner.lookup('service:store');
+
+    let name = 'dumbo';
+    let milkVolume = 10;
+    let healthy = true;
+    let record;
+    let id;
+
+    return run(() => {
+      record = store.createRecord('cow', {name: name});
+      assert.ok(record);
+
+      assert.equal(record.get('name'), name);
+
+      return record.save();
+    }).then(() => {
+      assert.step('save');
+
+      id = record.get('id');
+      assert.ok(id);
+
+      // Clear the cache to make sure we test the retrieved record.
+      store.unloadAll();
+      return store.findRecord('cow', id);
+    }).then(cow => {
+      assert.step('findRecord');
+
+      assert.ok(cow);
+      assert.equal(cow.get('name'), name);
+
+      // Add properties
+      cow.set('milkVolume', milkVolume);
+      cow.set('healthy', healthy);
+
+      return cow.save();
+    }).then(() => {
+      assert.step('save');
+
+      // Clear the cache to make sure we test the retrieved record.
+      store.unloadAll();
+      return store.findRecord('cow', id);
+    }).then(cow => {
+      assert.step('findRecord');
+      assert.verifySteps(['save', 'findRecord', 'save', 'findRecord'])
+
+      assert.ok(cow);
+      assert.equal(cow.get('name'), name);
+      assert.equal(cow.get('milkVolume'), milkVolume);
+      assert.equal(cow.get('healthy'), healthy);
+    });
+  });
+
   integrationTest('delete a barn', function(assert) {
     let store = this.owner.lookup('service:store');
 
