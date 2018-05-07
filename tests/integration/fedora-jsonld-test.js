@@ -27,7 +27,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
   // Small delays help indexer sync with Fedora and Elasticsearch
 
   hooks.beforeEach(function() {
-    return delay(4000);
+    return delay(5000);
   });
 
   hooks.beforeEach(function() {
@@ -37,7 +37,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
   });
 
   hooks.beforeEach(function() {
-    return delay(4000);
+    return delay(5000);
   });
 
   hooks.beforeEach(function() {
@@ -92,10 +92,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       barn1_id = barn1_record.get('id');
       barn2_id = barn2_record.get('id');
 
-      // Clear the cache to make sure we test the retrieved records.
-      store.unloadAll();
-
-      return store.findAll('barn');
+      return store.findAll('barn', {reload: true});
     }).then(result => {
       assert.step('findAll');
 
@@ -150,10 +147,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
         let id = record.get('id');
         assert.ok(id);
 
-        // Clear the cache to make sure we test the retrieved record.
-        store.unloadAll();
-
-        return store.findRecord('cow', id);
+        return store.findRecord('cow', id, {reload: true});
       }).then(cow => {
           assert.step('findRecord');
 
@@ -170,12 +164,12 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
     });
   });
 
-  // Show that JSON Merge is working.
+  // Show that updateRecord is working.
   integrationTest('update a cow', function(assert) {
     let store = this.owner.lookup('service:store');
 
     let name = 'dumbo';
-    let milkVolume = 10;
+    let weight = 10;
     let healthy = true;
     let record;
     let id;
@@ -193,9 +187,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       id = record.get('id');
       assert.ok(id);
 
-      // Clear the cache to make sure we test the retrieved record.
-      store.unloadAll();
-      return store.findRecord('cow', id);
+      return store.findRecord('cow', id, {reload: true});
     }).then(cow => {
       assert.step('findRecord');
 
@@ -203,23 +195,21 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       assert.equal(cow.get('name'), name);
 
       // Add properties
-      cow.set('milkVolume', milkVolume);
+      cow.set('weight', weight);
       cow.set('healthy', healthy);
 
       return cow.save();
     }).then(() => {
       assert.step('save');
 
-      // Clear the cache to make sure we test the retrieved record.
-      store.unloadAll();
-      return store.findRecord('cow', id);
+      return store.findRecord('cow', id, {reload: true});
     }).then(cow => {
       assert.step('findRecord');
       assert.verifySteps(['save', 'findRecord', 'save', 'findRecord'])
 
       assert.ok(cow);
       assert.equal(cow.get('name'), name);
-      assert.equal(cow.get('milkVolume'), milkVolume);
+      assert.equal(cow.get('weight'), weight);
       assert.equal(cow.get('healthy'), healthy);
     });
   });
@@ -247,9 +237,6 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       id = barn.get('id');
       assert.ok(id);
 
-      // Clear the cache to make sure we test the retrieved record.
-      //store.unloadAll();
-
       return barn.destroyRecord();
     }).then(() => {
       assert.step('delete');
@@ -257,7 +244,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       // TODO Must clear store or findRecord causes internal ember data error
       store.unloadAll();
 
-      return store.findRecord('barn', id).catch(() => assert.step('get fail'));
+      return store.findRecord('barn', id, {reload: true}).catch(() => assert.step('get fail'));
     });
 
     return result.then(() => {
@@ -309,10 +296,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
         barn_id = barn_record.get('id');
         assert.ok(barn_id);
 
-        // Clear the cache to make sure we test retrieved records.
-        store.unloadAll();
-
-        return store.findRecord('cow', cow_id);
+        return store.findRecord('cow', cow_id, {reload: true});
       }).then(cow => {
           assert.step('cow findRecord');
 
@@ -320,7 +304,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
           assert.equal(cow.get('weight'), cow_data.weight);
 
           // Empty set not expected to be persisted.
-          assert.notOk(cow.get('colors'));
+          assert.deepEqual(cow.get('colors'), []);
 
           assert.equal(cow.get('birthDate').toISOString(), cow_data.birthDate.toISOString());
 
@@ -338,10 +322,7 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
 
           return cow.save().then(() => barn.save());
         }).then(() => {
-            // Clear the cache to make sure we test retrieved records.
-            store.unloadAll();
-
-            return store.findRecord('cow', cow_id);
+            return store.findRecord('cow', cow_id, {reload: true});
         }).then(cow => {
           assert.equal(cow.get('barn.id'), barn_id);
 
