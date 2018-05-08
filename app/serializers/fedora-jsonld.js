@@ -189,6 +189,10 @@ export default DS.Serializer.extend({
     Convert the JSON representation of a model to JSON-LD suitable for Fedora.
     Custom transforms are not supported.
 
+    Every known attribute and relationship which is not present, must be added
+    with a null value. This will be ignored on a PUT or a POST, but is important
+    on a PATCH for JSON Merge to work correctly.
+
     @method serialize
     @param {DS.Snapshot} snapshot
     @param {Object} [options]
@@ -212,11 +216,12 @@ export default DS.Serializer.extend({
 
     snapshot.eachAttribute((key, attribute) => {
       let value = snapshot.attr(key);
+      let name = this.serializeKey(type, key);
 
       if (value != undefined && value != null) {
-        let name = this.serializeKey(type, key);
-
         jsonld[name] = this._serialize_attr(value, attribute.type);
+      } else {
+        jsonld[name] = null;
       }
     });
 
@@ -228,17 +233,19 @@ export default DS.Serializer.extend({
 
         if (id) {
           jsonld[name] = {"@id": id};
+        } else {
+          jsonld[name] = null;
         }
       } else if (relationship.kind === 'hasMany') {
         let ids = snapshot.hasMany(key, { ids: true });
 
         if (ids) {
           jsonld[name] = ids.map(id => ({"@id": id}));
+        } else {
+          jsonld[name] = null;
         }
       }
      });
-
-     //console.log(jsonld);
 
      return jsonld;
   },
@@ -296,7 +303,11 @@ export default DS.Serializer.extend({
       let hashkey = this.serializeKey(type, key);
 
       if (hashkey in hash) {
-        attrs[key] = this._normalize_attr(hash[hashkey], attribute.type);
+        let value = hash[hashkey];
+
+        if (value != null) {
+          attrs[key] = this._normalize_attr(hash[hashkey], attribute.type);
+        }
       }
     });
 
@@ -309,13 +320,15 @@ export default DS.Serializer.extend({
         let rel_target = hash[hashkey];
         let rel_type = relationship.type;
 
-        if (relationship.kind === 'belongsTo') {
-          rels[key] = {data: {id: rel_target, type: rel_type}};
-        } else if (relationship.kind === 'hasMany') {
-          if (Array.isArray(rel_target)) {
-            rels[key] = {data: rel_target.map(t => ({id: t, type: rel_type}))}
-          } else {
-            rels[key] = {data: [{id: rel_target, type: rel_type}]};
+        if (rel_target != null) {
+          if (relationship.kind === 'belongsTo') {
+            rels[key] = {data: {id: rel_target, type: rel_type}};
+          } else if (relationship.kind === 'hasMany') {
+            if (Array.isArray(rel_target)) {
+              rels[key] = {data: rel_target.map(t => ({id: t, type: rel_type}))}
+            } else {
+              rels[key] = {data: [{id: rel_target, type: rel_type}]};
+            }
           }
         }
       }

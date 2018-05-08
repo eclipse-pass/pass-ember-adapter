@@ -118,8 +118,9 @@ export default DS.Adapter.extend({
 
   /**
     Called by the store when an existing record is saved
-    via the `save` method on a model record instance. The Fedora container resprenting
-    the record is replaced with a PUT.
+    via the `save` method on a model record instance. The Fedora container representing
+    the record is updated with a PATCH which relies on Fedora supporting
+    JSON Merge Patch.
 
     TODO Handle concurrency, if-modified
 
@@ -134,9 +135,9 @@ export default DS.Adapter.extend({
     let serializer = store.serializerFor(type.modelName);
     let data = serializer.serialize(snapshot);
 
-    return this._ajax(url, 'PUT', {
+    return this._ajax(url, 'PATCH', {
       headers: {
-        'Content-Type': 'application/ld+json; charset=utf-8',
+        'Content-Type': 'application/merge-patch+json; charset=utf-8',
         'Prefer': JSON_LD_PREFER_HEADER
       },
       data: JSON.stringify(data)

@@ -115,13 +115,18 @@ The adapter requires @id and @type be used. It does not check the context for po
 
 The only context processing is expansion of compact IRIs for property names and type values.
 This expansion only happens if the context is included. The default behavior is for Fedora to
-rather verbosely include context.
+rather verbosely include context. The adapter works best if Fedora is modified to return clean
+compact JSON-LD based on the model context.
 
 The ember attribute type object (basic Javasript object) is not supported. The Fedora single
 subject restriction would make support a bit awkward. Note that JSON arrays of simple types
 are suppoted with set.
 
 Ember attribute transforms are not supported.
+
+# Requirements on Fedora
+
+Fedora must support Json Merge Patch.
 
 ## Searching
 

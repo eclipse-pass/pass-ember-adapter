@@ -31,7 +31,9 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
       weight: data.weight,
       healthy: data.healthy,
       milkVolume: data.milkVolume,
-      birthDate: data.birthDate.toISOString()
+      birthDate: data.birthDate.toISOString(),
+      colors: null,
+      barn: null
     };
 
     let result = record.serialize();
@@ -48,7 +50,7 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
       colors: ['teal', 'purple'],
       healthy: false,
       milkVolume: 1.5,
-      birthDate: new Date(Date.UTC(96, 11, 1, 0, 0, 0))
+      birthDate: new Date(Date.UTC(96, 11, 1, 0, 0, 0)),
     };
 
     let record = run(() => store.createRecord('cow', data));
@@ -62,7 +64,8 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
       colors: data.colors,
       healthy: data.healthy,
       milkVolume: data.milkVolume,
-      birthDate: data.birthDate.toISOString()
+      birthDate: data.birthDate.toISOString(),
+      barn: null
     };
 
     let result = record.serialize();
@@ -77,7 +80,14 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
     let expected = {
       '@context': ENV.test.context,
       '@id': '',
-      '@type': 'Cow'
+      '@type': 'Cow',
+      name: null,
+      weight: null,
+      healthy: null,
+      birthDate: null,
+      milkVolume: null,
+      colors: null,
+      barn: null
     };
 
     let result = record.serialize();
@@ -107,7 +117,11 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
       '@type': 'Cow',
       name: cow_data.name,
       weight: cow_data.weight,
-      birthDate: cow_data.birthDate.toISOString()
+      birthDate: cow_data.birthDate.toISOString(),
+      healthy: null,
+      milkVolume: null,
+      colors: null,
+      barn: null
     };
 
     let cow_result = cow_record.serialize();
@@ -116,7 +130,9 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
       '@context': ENV.test.context,
       '@id': '',
       '@type': 'Barn',
-      name: barn_data.name
+      name: barn_data.name,
+      cows: null,
+      colors: null
     };
 
     let barn_result = barn_record.serialize();

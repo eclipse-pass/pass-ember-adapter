@@ -7,6 +7,7 @@
         "@type": {"type": "keyword"},
         "name": {"type": "text"},
         "weight": {"type": "integer"},
+        "healthy": {"type": "boolean"},
         "birthDate": {"type": "date"},
         "milkVolume": {"type": "float"},
         "colors": {"type": "keyword"},
