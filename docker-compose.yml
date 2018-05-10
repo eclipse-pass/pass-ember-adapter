@@ -17,7 +17,7 @@ services:
       - ./tests/dummy/public/farm.jsonld:/usr/local/tomcat/lib/farm.jsonld:Z
 
   indexer:
-    image: oapass/indexer
+    image: oapass/indexer:0.0.6-2.0-SNAPSHOT
     container_name: indexer
     env_file: .env
     links:
