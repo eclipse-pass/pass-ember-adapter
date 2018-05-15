@@ -57,11 +57,11 @@ export default DS.Serializer.extend({
     //console.log('normalizeResponse for ' + requestType);
     //console.log(payload);
 
-    // Extract dataURI prefix if available
+    // Extract dataURI prefix if contained by inline @context
     let context = payload['@context'];
     let data_prefix = null;
 
-    if (context) {
+    if (context && typeof context == 'object') {
       data_prefix = Object.keys(context).find(key => context[key] === this.get('dataURI'));
     }
 
