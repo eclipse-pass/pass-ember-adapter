@@ -7,5 +7,7 @@ export default DS.Model.extend({
   birthDate: DS.attr('date'),
   milkVolume: DS.attr('number'),
   colors: DS.attr('set'),
-  barn: DS.belongsTo('barn')
+  barn: DS.belongsTo('barn'),
+  _moo: DS.attr('string'),
+  _has_bff: DS.belongsTo('cow', { inverse: null })
 });

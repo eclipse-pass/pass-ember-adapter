@@ -218,14 +218,20 @@ export default DS.Serializer.extend({
       let value = snapshot.attr(key);
       let name = this.serializeKey(type, key);
 
-      if (value != undefined && value != null) {
-        jsonld[name] = this._serialize_attr(value, attribute.type);
-      } else {
-        jsonld[name] = null;
+      if (key.charAt(0) !== '_') {
+        if (value != undefined && value != null) {
+          jsonld[name] = this._serialize_attr(value, attribute.type);
+        } else {
+          jsonld[name] = null;
+        }
       }
     });
 
     snapshot.eachRelationship((key, relationship) => {
+      if (key.charAt(0) === '_') {
+        return;
+      }
+
       let name = this.serializeKey(type, key);
 
       if (relationship.kind === 'belongsTo') {
@@ -245,9 +251,9 @@ export default DS.Serializer.extend({
           jsonld[name] = null;
         }
       }
-     });
+    });
 
-     return jsonld;
+    return jsonld;
   },
 
  /**

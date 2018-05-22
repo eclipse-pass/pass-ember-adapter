@@ -41,6 +41,35 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
     assert.deepEqual(result, expected);
   });
 
+  test('it serializes cow with hidden attribute', function(assert) {
+    let store = this.owner.lookup('service:store');
+
+    let data = {
+      name: 'wilbur',
+      weight: 800,
+      _moo: 'excellent'
+    };
+
+    let record = run(() => store.createRecord('cow', data));
+
+    let expected = {
+      '@context': ENV.test.context,
+      '@id': '',
+      '@type': 'Cow',
+      name: data.name,
+      weight: data.weight,
+      healthy: null,
+      milkVolume: null,
+      birthDate: null,
+      colors: null,
+      barn: null
+    };
+
+    let result = record.serialize();
+
+    assert.deepEqual(result, expected);
+  });
+
   test('it serializes cow with array property', function(assert) {
     let store = this.owner.lookup('service:store');
 
@@ -145,6 +174,9 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
     run(() => {
       cow_record.set('id', 'cow:34');
       barn_record.set('id', 'barn:10');
+
+      // Also try setting a hidden relationship which should be ignored
+      cow_record.set('_has_bff', cow_record);
 
       cow_record.set('barn', barn_record);
       barn_record.get('cows').pushObject(cow_record);
