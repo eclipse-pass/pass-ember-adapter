@@ -219,15 +219,19 @@ export default DS.Serializer.extend({
       let name = this.serializeKey(type, key);
 
       if (value != undefined && value != null) {
-        jsonld[name] = this._serialize_attr(value, attribute.type);
+        if (key.charAt(0) !== '_') {
+          jsonld[name] = this._serialize_attr(value, attribute.type);
+        }
       } else {
         jsonld[name] = null;
       }
     });
 
     snapshot.eachRelationship((key, relationship) => {
+      if (key.charAt(0) === '_') {
+        return jsonld;
+      }
       let name = this.serializeKey(type, key);
-
       if (relationship.kind === 'belongsTo') {
         let id = snapshot.belongsTo(key, { id: true });
 
