@@ -29,6 +29,8 @@ in the context as terms. By default an attribute or relationships name maps dire
 must be used consistently in all models. Some terms in the context require a type set, some do not. Whether or not an optional type is specified will
 oddly influence compaction, but will not affect the adapter.
 
+If an attribute starts with an `_`, it will be ignored by the adapter and not persisted to Fedora.
+
 The set type is an extension provided to handle arrays of simple types like strings, numbers, and booleans.
 The adapter will not preserve the order of a set attribute when an object is persisted. The adapter will
 not persist an empty set.
