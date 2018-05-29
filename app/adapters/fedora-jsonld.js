@@ -237,6 +237,10 @@ export default DS.Adapter.extend({
       }
     };
 
+    result._source = {
+      excludes: "*_suggest"
+    };
+
     return result;
   },
 
