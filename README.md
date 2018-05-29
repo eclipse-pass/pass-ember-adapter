@@ -102,7 +102,7 @@ Example JSON-LD context:
 
 ```
 
-Some required types are set, some are not.
+Some types are set, some are not.
 
 ## Ember data structure in Fedora
 
@@ -145,12 +145,13 @@ The query argument can be the form: clause or
       query: clause,
       from: number,
       size: number,
+      sort: sort_request,
       info: object_ref
     }
     ```
 
 If the query argument has a 'query' key, the clause is taken
-to be the value of that key. If 'from' or 'size' keys are present in the
+to be the value of that key. If 'from', 'size', or 'sort' keys are present in the
 query argument, they are used to modify what results are returned. If the
 'info' key is present, its value is an object reference upon which the 'total'
 key is set to the total number of matching results. Note that if the query
