@@ -214,20 +214,17 @@ export default DS.Adapter.extend({
   },
 
   // Create an elasticsearch query that restricts the given query to the given type.
-  // Add size and from from options if presents
+  // Add size, sort, and from from options if presents
   _create_elasticsearch_query(query, jsonld_type) {
     let result = {};
     let clause = Object.assign({}, query);
 
-    if ('size' in clause) {
-      result.size = query.size;
-      delete clause.size;
-    }
-
-    if ('from' in clause) {
-      result.from = query.from;
-      delete clause.from;
-    }
+    ['size', 'from', 'sort'].forEach(key => {
+        if (key in clause) {
+          result[key] = query[key];
+          delete clause[key];
+        }
+    });
 
     if ('query' in clause) {
       clause = clause.query;
@@ -238,6 +235,10 @@ export default DS.Adapter.extend({
         must: clause,
         filter: {term: {'@type': jsonld_type}}
       }
+    };
+
+    result._source = {
+      excludes: "*_suggest"
     };
 
     return result;

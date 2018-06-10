@@ -384,8 +384,8 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
     }).then(() => assert.verifySteps(['save', 'wait', 'query']));
   });
 
-  // Persist three barns and test from, size, and info when doing a query
-  integrationTest('query with from and limit', function(assert) {
+  // Persist three barns and test from, size, sort, and info when doing a query
+  integrationTest('query with sort, from. and limit', function(assert) {
     let store = this.owner.lookup('service:store');
 
     let barn1_data = {
@@ -430,7 +430,8 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
       assert.ok(result);
       assert.equal(result.get('length'), 2);
 
-      return store.query('barn', {term: {colors : 'green'}, from: 1, size: 2});
+      return store.query('barn', {term: {colors : 'green'}, sort: {colors: {order: 'asc', mode: 'max'}},
+        from: 1, size: 2});
     }).then(result => {
       assert.ok(result);
       assert.equal(result.get('length'), 2);
