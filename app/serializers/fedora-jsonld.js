@@ -57,6 +57,19 @@ export default DS.Serializer.extend({
     //console.log('normalizeResponse for ' + requestType);
     //console.log(payload);
 
+    if (typeof payload === 'string') {
+      /*
+       * In the case of an expired session cookie, Shib seems to respond with a 302 status to 
+       * automatically redirect to the login page, which the JS is happy to do. Can't seem to 
+       * intercept this before it redirects, so the ultimate response captured here can be the 
+       * HTML SAML response page.
+       *
+       * In the case that 'string' payload is found, assume this redirection has occured and 
+       * throw an nicer error that can be caught in the Ember app
+       */
+      // window.location.reload(true);
+      throw new Error('shib302');
+    }
     // Extract dataURI prefix if contained by inline @context
     let context = payload['@context'];
     let data_prefix = null;
