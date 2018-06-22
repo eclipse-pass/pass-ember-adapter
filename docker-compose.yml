@@ -3,7 +3,7 @@ version: '2'
 services:
 
   fcrepo:
-    image: oapass/fcrepo:4.7.5-2.0-SNAPSHOT-5
+    image: oapass/fcrepo:4.7.5-2.2-SNAPSHOT-8@sha256:75abb2ccc05040f65c4ca854871d7005ea6853c974d70d932823a6ad3b611d23
     container_name: fcrepo
     env_file: .env
     environment:
@@ -17,7 +17,7 @@ services:
       - ./tests/dummy/public/farm.jsonld:/usr/local/tomcat/lib/farm.jsonld:Z
 
   indexer:
-    image: oapass/indexer:0.0.6-2.0-SNAPSHOT
+    image: oapass/indexer:0.0.12-2.2-SNAPSHOT@sha256:a8599b27219d9cb85b596fd90d173e370c3d53494630a98c00bee43f5c7bd8e6
     container_name: indexer
     env_file: .env
     links:
