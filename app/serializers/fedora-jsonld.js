@@ -59,12 +59,12 @@ export default DS.Serializer.extend({
 
     if (typeof payload === 'string') {
       /*
-       * In the case of an expired session cookie, Shib seems to respond with a 302 status to 
-       * automatically redirect to the login page, which the JS is happy to do. Can't seem to 
-       * intercept this before it redirects, so the ultimate response captured here can be the 
+       * In the case of an expired session cookie, Shib seems to respond with a 302 status to
+       * automatically redirect to the login page, which the JS is happy to do. Can't seem to
+       * intercept this before it redirects, so the ultimate response captured here can be the
        * HTML SAML response page.
        *
-       * In the case that 'string' payload is found, assume this redirection has occured and 
+       * In the case that 'string' payload is found, assume this redirection has occured and
        * throw an nicer error that can be caught in the Ember app
        */
       // window.location.reload(true);
@@ -251,7 +251,7 @@ export default DS.Serializer.extend({
         let id = snapshot.belongsTo(key, { id: true });
 
         if (id) {
-          jsonld[name] = {"@id": id};
+          jsonld[name] = id;
         } else {
           jsonld[name] = null;
         }
@@ -259,7 +259,7 @@ export default DS.Serializer.extend({
         let ids = snapshot.hasMany(key, { ids: true });
 
         if (ids) {
-          jsonld[name] = ids.map(id => ({"@id": id}));
+          jsonld[name] = ids;
         } else {
           jsonld[name] = null;
         }
