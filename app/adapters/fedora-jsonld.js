@@ -310,9 +310,10 @@ export default DS.Adapter.extend({
       headers: {'Content-Type': 'application/json; charset=utf-8'},
     }).then((result) => {
       if (typeof result === 'string') {
+        // Pass 'result' onto normalizeResponse so it can trigger the 'shib302' thing
         throw new Error('shib302');
       }
-      this._parse_elasticsearch_result(result, info);
+      return this._parse_elasticsearch_result(result, info);
     });
   },
 
