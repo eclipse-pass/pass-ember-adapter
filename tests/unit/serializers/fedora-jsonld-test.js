@@ -183,8 +183,8 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
 
       cow_expected['@id'] = cow_record.get('id');
       barn_expected['@id'] = barn_record.get('id');
-      cow_expected.barn = {"@id": barn_record.get('id')};
-      barn_expected.cows = [{"@id": cow_record.get('id')}];
+      cow_expected.barn = barn_record.get('id');
+      barn_expected.cows = [cow_record.get('id')];
 
       cow_result = cow_record.serialize();
       barn_result = barn_record.serialize();
