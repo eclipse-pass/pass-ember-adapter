@@ -94,6 +94,56 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
     });
   });
 
+  // Create a barn and then a cow with a relationship to the barn
+  test('createRecord and with a relationship', function(assert) {
+    let store = this.owner.lookup('service:store');
+    let barn_id = 'http://localhost/data/barns/a/b/21';
+    let cow_id = 'http://localhost/data/kine/123';
+
+    let barn_data = {
+      name: 'cave'
+    };
+
+    let cow_data = {
+      name: 'bear'
+    };
+
+    server = new Pretender(function() {
+      this.post('http://localhost/data/barns', function() {
+        assert.step('post barn');
+        return [200, { "Content-Type": "plain/text", "Location": barn_id }, barn_id];
+      });
+
+      this.post('http://localhost/data/kine', function() {
+        assert.step('post cow');
+        return [200, { "Content-Type": "plain/text", "Location": cow_id }, cow_id];
+      });
+    });
+
+    return run(() => {
+      let barn = store.createRecord('barn', barn_data);
+      assert.ok(barn);
+
+      return barn.save();
+    }).then(barn => {
+      assert.step('save barn')
+
+      assert.ok(barn);
+      assert.equal(barn.get('id'), barn_id);
+
+      let cow = store.createRecord('cow', cow_data);
+      cow.set('barn', barn);
+
+      return cow.save();
+    }).then(cow => {
+      assert.step('save cow');
+
+      assert.ok(cow);
+      assert.equal(cow.get('barn.id'), barn_id);
+
+    }).then(() => assert.verifySteps(['post barn', 'save barn', 'post cow', 'save cow']));
+  });
+
   test('createRecord and updateRecord for barn and related cow', function(assert) {
     let store = this.owner.lookup('service:store');
     let barn_id = 'http://localhost/data/barns/a/b/21';
