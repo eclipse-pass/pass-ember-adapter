@@ -108,14 +108,19 @@ export default DS.Adapter.extend({
       headers: {'Content-Type': 'application/ld+json; charset=utf-8'},
     }).then((resp, status, xhr) => {
       // Return JSON-LD object with @id for serializer.normalizeResponse.
-
       let id = xhr.getResponseHeader('Location');
       data['@id'] = id;
-
+      if (id == null) {
+        // Pass 'result' onto normalizeResponse so it can trigger the 'shib302' thing
+        throw new Error('shib302');
+      }
       return data;
+    }).catch(function(error) {
+      // Pass 'result' onto normalizeResponse so it can trigger the 'shib302' thing
+      throw new Error('shib302');
     });
   },
-
+  
   /**
     Called by the store when an existing record is saved
     via the `save` method on a model record instance. The Fedora container representing
@@ -309,7 +314,7 @@ export default DS.Adapter.extend({
       data: JSON.stringify(data),
       headers: {'Content-Type': 'application/json; charset=utf-8'},
     }).then((result) => {
-      if (typeof result === 'string') {
+      if (typeof result == 'string') {
         // Pass 'result' onto normalizeResponse so it can trigger the 'shib302' thing
         throw new Error('shib302');
       }
