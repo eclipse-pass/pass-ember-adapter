@@ -115,7 +115,7 @@ export default DS.Adapter.extend({
         throw new Error('shib302');
       }
       return data;
-    }).catch(function(error) {
+    }).catch(function() {
       // Pass 'result' onto normalizeResponse so it can trigger the 'shib302' thing
       throw new Error('shib302');
     });
@@ -319,7 +319,7 @@ export default DS.Adapter.extend({
         throw new Error('shib302');
       }
       return this._parse_elasticsearch_result(result, info);
-    }).catch(function(error) {
+    }).catch(function() {
       // Pass 'result' onto normalizeResponse so it can trigger the 'shib302' thing
       throw new Error('shib302');
     });
