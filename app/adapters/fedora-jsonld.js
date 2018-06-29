@@ -313,26 +313,13 @@ export default DS.Adapter.extend({
     return this._ajax(url, 'POST', {
       data: JSON.stringify(data),
       headers: {'Content-Type': 'application/json; charset=utf-8'},
-    }).then((result, status, xhr) => {
-      console.log("JSON:" + JSON.stringify(result, null, 2));
-      console.log("successful result: " + result);
-      console.log("successful status: " + xhr.status);
-      console.log("successful getAllResponseHeaders: " + xhr.getAllResponseHeaders());
-      console.log("successful responseURL:" + xhr.responseURL);
-      console.log("successful responseText:" + xhr.responseText);
-      console.log("successful responseType:" + xhr.responseType);
+    }).then((result) => {
       if (typeof result == 'string') {
         // Pass 'result' onto normalizeResponse so it can trigger the 'shib302' thing
         throw new Error('shib302');
       }
       return this._parse_elasticsearch_result(result, info);
-    }).catch(function(xhr, status, error) {
-      console.log("error:" + error);
-      console.log("error status:" + xhr.status);
-      console.log("error responseURL:" + xhr.responseURL);
-      console.log("error responseText:" + xhr.responseText);
-      console.log("error responseType:" + xhr.responseType);
-      console.log("successful getAllResponseHeaders: " + xhr.getAllResponseHeaders());
+    }).catch(function() {
       // Pass 'result' onto normalizeResponse so it can trigger the 'shib302' thing
       throw new Error('shib302');
     });
