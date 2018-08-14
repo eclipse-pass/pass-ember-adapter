@@ -110,14 +110,8 @@ export default DS.Adapter.extend({
       // Return JSON-LD object with @id for serializer.normalizeResponse.
       let id = xhr.getResponseHeader('Location');
       data['@id'] = id;
-      if (id == null) {
-        // Pass 'result' onto normalizeResponse so it can trigger the 'shib302' thing
-        throw new Error('shib302');
-      }
+
       return data;
-    }).catch(function() {
-      // Pass 'result' onto normalizeResponse so it can trigger the 'shib302' thing
-      throw new Error('shib302');
     });
   },
   
@@ -314,14 +308,7 @@ export default DS.Adapter.extend({
       data: JSON.stringify(data),
       headers: {'Content-Type': 'application/json; charset=utf-8'},
     }).then((result) => {
-      if (typeof result == 'string') {
-        // Pass 'result' onto normalizeResponse so it can trigger the 'shib302' thing
-        throw new Error('shib302');
-      }
       return this._parse_elasticsearch_result(result, info);
-    }).catch(function() {
-      // Pass 'result' onto normalizeResponse so it can trigger the 'shib302' thing
-      throw new Error('shib302');
     });
   },
 
