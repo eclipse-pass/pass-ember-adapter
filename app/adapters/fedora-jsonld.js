@@ -20,32 +20,24 @@ export default DS.Adapter.extend({
   password: null,
   defaultSerializer: '-fedora-jsonld',
 
-  // Merge standard headers into provided heades and return the result.
-  // In particular, a basic authorization header is added if appropriate.
-  _merge_headers(headers = {}) {
-    let user = this.get('username');
-    let pass = this.get('password');
-
-    if (user && pass) {
-      headers['Authorization'] = "Basic " + btoa(user + ':' + pass);
-    }
-
-    return headers;
-  },
-
   // Helper for making an ajax calls.
-  // Use headers option to add headers.
+  // Adds a basic authorization header if appropriate.
   _ajax(url, method, options = {}) {
     options.url = url;
     options.method = method;
 
+    // Make sure jquery does not replace %20 with +.
+    options.processData = false;
+
     //console.log(method + " " + url);
 
-    let headers = this._merge_headers(options.header);
+    let user = this.get('username');
+    let pass = this.get('password');
 
-    options.beforeSend = function (xhr) {
-      Object.keys(headers).forEach((key) => xhr.setRequestHeader(key, headers[key]));
-    };
+    if (user && pass) {
+      options.headers = options.headers || {};
+      options.headers['Authorization'] = "Basic " + btoa(user + ':' + pass);
+    }
 
     // Needed for cross-site support.
     options.xhrFields = {withCredentials: true};
@@ -114,7 +106,7 @@ export default DS.Adapter.extend({
       return data;
     });
   },
-  
+
   /**
     Called by the store when an existing record is saved
     via the `save` method on a model record instance. The Fedora container representing
