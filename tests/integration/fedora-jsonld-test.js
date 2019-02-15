@@ -164,6 +164,32 @@ module('Integration | Adapter | fedora jsonld', function(hooks) {
     });
   });
 
+  integrationTest('create a cow with attribute including %20', function(assert) {
+    let store = this.owner.lookup('service:store');
+
+    let data = {
+      name: 'yoda%20bessie$bubba:matilda'
+    };
+
+    let result = run(() => {
+      return store.createRecord('cow', data).save();
+    }).then(cow => {
+      assert.step('save');
+
+      assert.equal(cow.get('name'), data.name);
+
+      return store.findRecord('cow', cow.get('id'), {reload: true});
+    }).then(cow => {
+      assert.step('findRecord');
+
+      assert.equal(cow.get('name'), data.name);
+    });
+
+    return result.then(() => {
+      assert.verifySteps(['save', 'findRecord'])
+    });
+  });
+
   // Show that updateRecord is working.
   integrationTest('update a cow', function(assert) {
     let store = this.owner.lookup('service:store');
