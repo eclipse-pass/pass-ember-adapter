@@ -1,6 +1,6 @@
 {
   "name": "ember-fedora-adapter",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Adapter for the Fedora repository.",
   "keywords": [
     "ember-addon"
