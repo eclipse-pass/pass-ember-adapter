@@ -258,6 +258,35 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
     }).then(() => assert.verifySteps(['post', 'save']));
   });
 
+  test('createRecord handles %20 in attributes', function(assert) {
+    let store = this.owner.lookup('service:store');
+    let id = 'http://localhost/data/kine/21'
+
+    let data = {
+      name: 'yoda%20luke%20bessie the fourth'
+    };
+
+    server = new Pretender(function() {
+      this.post('http://localhost/data/kine', function(req) {
+        assert.step('post');
+        assert.equal(data.name, JSON.parse(req.requestBody).name);
+        return [200, { "Content-Type": "plain/text", "Location": id }, id];
+      });
+    });
+
+    return run(() => {
+      let record = store.createRecord('cow', data);
+      assert.ok(record);
+
+      return record.save().then(() => {
+        assert.step('save')
+
+        assert.equal(data.name, record.get('name'));
+      });
+
+    }).then(() => assert.verifySteps(['post', 'save']));
+  });
+
   test('query matching two cows', function(assert) {
     let store = this.owner.lookup('service:store');
 
