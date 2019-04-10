@@ -108,46 +108,46 @@ export default DS.Serializer.extend({
     switch (attr_type) {
       case 'string':
         if (value_type != 'string') {
-          throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value;
+          throw new Error('Value type ' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value);
         }
 
         return value;
       case 'number':
         if (value_type != 'number') {
-            throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value;
+            throw new Error('Value type ' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value);
         }
 
         return value;
       case 'boolean':
         if (value_type != 'boolean') {
-            throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value;
+            throw new Error('Value type ' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value);
         }
 
         return value;
       case 'date':
         if (!(value instanceof Date)) {
-            throw 'Value not compatible with attribute type ' + attr_type;
+            throw new Error('Value not compatible with attribute type ' + attr_type);
         }
 
         return value.toISOString();
       case 'set':
         if (!Array.isArray(value)) {
-            throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type
-                  + ' which must be array of simple types for value ' + value;
+            throw new Error('Value type ' + value_type + ' not compatible with attribute type ' + attr_type
+                  + ' which must be array of simple types for value ' + value);
         }
 
         value.forEach(el => {
           let el_type = typeof el;
 
           if (!this.SET_ELEMENT_TYPES.includes(el_type)) {
-            throw 'Array element type ' + el_type + ' not compatible with attribute type '
-                  + attr_type + ' which must be array of simple types for value ' + value;
+            throw new Error('Array element type ' + el_type + ' not compatible with attribute type '
+                  + attr_type + ' which must be array of simple types for value ' + value);
           }
         });
 
         return value;
       default:
-        throw 'Attribute type unsupported: ' + attr_type;
+        throw new Error('Attribute type unsupported: ' + attr_type);
     }
   },
 
@@ -158,19 +158,19 @@ export default DS.Serializer.extend({
     switch (attr_type) {
       case 'string':
         if (value_type != 'string') {
-            throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value;
+            throw new Error('Value type ' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value);
         }
 
         return value;
       case 'number':
         if (value_type != 'number') {
-            throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value;
+            throw new Error('Value type ' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value);
         }
 
         return value;
       case 'boolean':
         if (value_type != 'boolean') {
-            throw 'Value type' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value;
+            throw new Error('Value type' + value_type + ' not compatible with attribute type ' + attr_type + ' for value ' + value);
         }
 
         return value;
@@ -179,22 +179,22 @@ export default DS.Serializer.extend({
         return new Date(Date.parse(value));
       case 'set':
         if (!Array.isArray(value)) {
-            throw 'Value type ' + value_type + ' not compatible with attribute type ' + attr_type
-                  + ' which must be array of simple types for value ' + value;
+            throw new Error('Value type ' + value_type + ' not compatible with attribute type ' + attr_type
+                  + ' which must be array of simple types for value ' + value);
         }
 
         value.forEach(el => {
           let el_type = typeof el;
 
           if (!this.SET_ELEMENT_TYPES.includes(el_type)) {
-            throw 'Array element type ' + el_type + ' not compatible with attribute type '
-                  + attr_type + ' which must be array of simple types for value ' + value;
+            throw new Error('Array element type ' + el_type + ' not compatible with attribute type '
+                  + attr_type + ' which must be array of simple types for value ' + value);
           }
         });
 
         return value;
       default:
-        throw 'Attribute type unsupported: ' + attr_type;
+        throw new Error('Attribute type unsupported: ' + attr_type);
     }
   },
 
@@ -313,7 +313,7 @@ export default DS.Serializer.extend({
 
     if (!hash['@type'].includes(jsonld_type) &&
         (!data_prefix || !hash['@type'].includes(data_prefix + ':' + jsonld_type))) {
-      throw 'Could not find expected JSON-LD type ' + jsonld_type + ' in: ' + hash['@type'];
+      throw new Error('Could not find expected JSON-LD type ' + jsonld_type + ' in: ' + hash['@type']);
     }
 
     // Get attributes of the model found in the hash
