@@ -1,6 +1,5 @@
 import DS from 'ember-data';
 import RSVP from 'rsvp';
-import $ from 'jquery';
 import { camelize } from '@ember/string';
 import { pluralize } from 'ember-inflector';
 
@@ -20,16 +19,14 @@ export default DS.Adapter.extend({
   password: null,
   defaultSerializer: '-fedora-jsonld',
 
-  // Helper for making an ajax calls.
+  // Helper for making an ajax calls that returns a fetch response.
+  // Throws an error if call not successful.
   // Adds a basic authorization header if appropriate.
   _ajax(url, method, options = {}) {
-    options.url = url;
     options.method = method;
 
-    // Make sure jquery does not replace %20 with +.
-    options.processData = false;
-
-    //console.log(method + " " + url);
+    // Needed for cross-site support.
+    options.credentials = 'include';
 
     let user = this.get('username');
     let pass = this.get('password');
@@ -39,10 +36,13 @@ export default DS.Adapter.extend({
       options.headers['Authorization'] = "Basic " + btoa(user + ':' + pass);
     }
 
-    // Needed for cross-site support.
-    options.xhrFields = {withCredentials: true};
+    return fetch(url, options).then(response => {
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
 
-    return $.ajax(options);
+      return response;
+    });
   },
 
   // Return a Promise which delete an object and its tombstone from Fedora.
@@ -73,7 +73,7 @@ export default DS.Adapter.extend({
 
     return this._ajax(url, 'POST', {
       headers: {'Content-Type': 'application/json'},
-      data: JSON.stringify(query)
+      body: JSON.stringify(query)
     });
   },
 
@@ -96,11 +96,11 @@ export default DS.Adapter.extend({
     let data = serializer.serialize(snapshot);
 
     return this._ajax(url, "POST", {
-      data: JSON.stringify(data),
+      body: JSON.stringify(data),
       headers: {'Content-Type': 'application/ld+json; charset=utf-8'},
-    }).then((resp, status, xhr) => {
+    }).then((response) => {
       // Return JSON-LD object with @id for serializer.normalizeResponse.
-      let id = xhr.getResponseHeader('Location');
+      let id = response.headers.get('Location');
       data['@id'] = id;
 
       return data;
@@ -131,7 +131,7 @@ export default DS.Adapter.extend({
         'Content-Type': 'application/merge-patch+json; charset=utf-8',
         'Prefer': JSON_LD_PREFER_HEADER
       },
-      data: JSON.stringify(data)
+      body: JSON.stringify(data)
     });
   },
 
@@ -170,7 +170,7 @@ export default DS.Adapter.extend({
         'Accept': JSON_LD_ACCEPT_HEADER,
         'Prefer': JSON_LD_PREFER_HEADER
       }
-    });
+    }).then(response => response.json());
   },
 
   /**
@@ -190,18 +190,16 @@ export default DS.Adapter.extend({
   // eslint-disable-next-line no-unused-vars
   findAll(store, type, sinceToken, snapshotRecordArray) {
     let url = this.buildURL(type.modelName);
-    let query = {};
 
     // TODO Investigate query
     //console.log('findAll ' + url);
 
     return this._ajax(url, 'GET', {
-      data: query,
       headers: {
         'Accept': JSON_LD_ACCEPT_HEADER,
         'Prefer': JSON_LD_INCLUDE_PREFER_HEADER
       }
-    });
+    }).then(response => response.json());
   },
 
   // Create an elasticsearch query that restricts the given query to the given type.
@@ -297,9 +295,9 @@ export default DS.Adapter.extend({
     let data = this._create_elasticsearch_query(query, jsonld_type);
 
     return this._ajax(url, 'POST', {
-      data: JSON.stringify(data),
+      body: JSON.stringify(data),
       headers: {'Content-Type': 'application/json; charset=utf-8'},
-    }).then((result) => {
+    }).then(response => response.json()).then(result => {
       return this._parse_elasticsearch_result(result, info);
     });
   },
