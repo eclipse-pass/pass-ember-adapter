@@ -13,7 +13,7 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
   setupApplicationTest(hooks);
 
   // Configure the adapter for this test by modifing what the application adapter
-  // will load. The adapter itself cannot be looked up and modifed because a new
+  // will load. The adapter itself cannot be looked up and modified because a new
   // instance is created every time.
 
   hooks.before(() => {
@@ -42,7 +42,7 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
       this.get('http://localhost/data/kine', function() {
         let response = {
           '@id': 'http://localhost/data/kine',
-          '@context': {farm: 'http://example.com/farm/'},
+          '@context': 'http://example.com/farm/',
           '@graph': []
         };
 
@@ -57,23 +57,19 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
     });
   });
 
+  // Fedora will return server triples despite despite requests not to.
   test('findAll returning two barns', function(assert) {
     server = new Pretender(function() {
       this.get('http://localhost/data/barns', function() {
         let response = {
-          '@context': {
-            farm: 'http://example.com/farm/',
-            Barn: 'farm:Barn',
-            name: 'farm:name',
-            fedora: 'http://fedora.info/definitions/v4/repository#'
-          },
+          '@context': 'http://example.com/farm/',
           '@graph': [{
             "@id": "http://localhost/data/barns",
             "contains": ["http://localhost/data/barns/1", "http://localhost/data/barns2"]
           },{
             "@id": "http://localhost/data/barns/1",
-            "@type": ["farm:Barn", "fedora:Resource", "fedora:Container"],
-            "farm:name": "Number one",
+            "@type": ["Barn", "fedora:Resource", "fedora:Container"],
+            "name": "Number one",
           },{
             "@id": "http://localhost/data/barns/2",
             "@type": ["Barn", "fedora:Resource", "fedora:Container"],
