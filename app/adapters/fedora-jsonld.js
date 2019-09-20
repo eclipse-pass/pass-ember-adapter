@@ -5,7 +5,6 @@ import { pluralize } from 'ember-inflector';
 
 const JSON_LD_ACCEPT_HEADER = 'application/ld+json; profile="http://www.w3.org/ns/json-ld#compacted"';
 const JSON_LD_PREFER_HEADER = 'return=representation; omit="http://fedora.info/definitions/v4/repository#ServerManaged"';
-const JSON_LD_INCLUDE_PREFER_HEADER = 'return=representation; omit="http://fedora.info/definitions/v4/repository#ServerManaged"; include="http://fedora.info/definitions/v4/repository#EmbedResources"'
 
 // Configuration properties:
 //   baseURI: Absolute URI of Fedora container used to store data.
@@ -174,11 +173,9 @@ export default DS.Adapter.extend({
   },
 
   /**
-    Called by the store in order to fetch all instances of a type.
-    Fedora keeps all instances of a type in a container. This GET returns
-    all of those children in a @graph.
-
-    The normalizeResponse method on the serializer is called on the result.
+    Called by the store in order to fetch all instances of a type. But returning all instances of a type is
+    impractical. Instead of retreiving all results from the Fedora container
+    which performs poorly, use Elasticsearch and return up to 100.
 
     @method findAll
     @param {DS.Store} store
@@ -189,17 +186,7 @@ export default DS.Adapter.extend({
   */
   // eslint-disable-next-line no-unused-vars
   findAll(store, type, sinceToken, snapshotRecordArray) {
-    let url = this.buildURL(type.modelName);
-
-    // TODO Investigate query
-    //console.log('findAll ' + url);
-
-    return this._ajax(url, 'GET', {
-      headers: {
-        'Accept': JSON_LD_ACCEPT_HEADER,
-        'Prefer': JSON_LD_INCLUDE_PREFER_HEADER
-      }
-    }).then(response => response.json());
+    return this.query(store, type, {query: {match_all: {}}, size: 100})
   },
 
   // Create an elasticsearch query that restricts the given query to the given type.
