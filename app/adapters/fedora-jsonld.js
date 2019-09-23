@@ -112,7 +112,7 @@ export default DS.Adapter.extend({
     the record is updated with a PATCH which relies on Fedora supporting
     JSON Merge Patch.
 
-    TODO Handle concurrency, if-modified
+    Returned promise should resolve to undefined on success.
 
     @method updateRecord
     @param {DS.Store} store
@@ -131,7 +131,7 @@ export default DS.Adapter.extend({
         'Prefer': JSON_LD_PREFER_HEADER
       },
       body: JSON.stringify(data)
-    });
+    }).then(undefined);
   },
 
   /**
