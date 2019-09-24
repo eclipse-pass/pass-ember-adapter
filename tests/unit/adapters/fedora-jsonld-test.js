@@ -13,7 +13,7 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
   setupApplicationTest(hooks);
 
   // Configure the adapter for this test by modifing what the application adapter
-  // will load. The adapter itself cannot be looked up and modifed because a new
+  // will load. The adapter itself cannot be looked up and modified because a new
   // instance is created every time.
 
   hooks.before(() => {
@@ -38,15 +38,25 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
   //}
 
   test('findAll on empty type', function(assert) {
-    server = new Pretender(function() {
-      this.get('http://localhost/data/kine', function() {
-        let response = {
-          '@id': 'http://localhost/data/kine',
-          '@context': {farm: 'http://example.com/farm/'},
-          '@graph': []
-        };
+    let es_result = {
+      "took" : 12,
+      "timed_out" : false,
+      "_shards" : {
+        "total" : 5,
+        "successful" : 5,
+        "skipped" : 0,
+        "failed" : 0
+      },
+      "hits" : {
+        "total" : 0,
+        "max_score" : 1.9924302,
+        "hits" : []
+      }
+    };
 
-        return [200, { "Content-Type": "application/ld+json" }, JSON.stringify(response)];
+    server = new Pretender(function() {
+      this.post('http://localhost:9200/_search', function() {
+        return [200, { "Content-Type": "application/ld+json" }, JSON.stringify(es_result)];
       });
     });
 
@@ -58,30 +68,45 @@ module('Unit | Adapter | fedora jsonld', function(hooks) {
   });
 
   test('findAll returning two barns', function(assert) {
-    server = new Pretender(function() {
-      this.get('http://localhost/data/barns', function() {
-        let response = {
-          '@context': {
-            farm: 'http://example.com/farm/',
-            Barn: 'farm:Barn',
-            name: 'farm:name',
-            fedora: 'http://fedora.info/definitions/v4/repository#'
-          },
-          '@graph': [{
-            "@id": "http://localhost/data/barns",
-            "contains": ["http://localhost/data/barns/1", "http://localhost/data/barns2"]
-          },{
-            "@id": "http://localhost/data/barns/1",
-            "@type": ["farm:Barn", "fedora:Resource", "fedora:Container"],
-            "farm:name": "Number one",
-          },{
-            "@id": "http://localhost/data/barns/2",
-            "@type": ["Barn", "fedora:Resource", "fedora:Container"],
-            "name": "Number two",
-          }]
-        };
+    let es_result = {
+      "took" : 12,
+      "timed_out" : false,
+      "_shards" : {
+        "total" : 5,
+        "successful" : 5,
+        "skipped" : 0,
+        "failed" : 0
+      },
+      "hits" : {
+        "total" : 2,
+        "max_score" : 1.9924302,
+        "hits" : [{
+          "_index" : "pass",
+          "_type" : "_doc",
+          "_id" : "L2ZjcmVwby9yZXN0L2dyYW50cy9iOC82Mi9hNi9jNy9iODYyYTZjNy0wMzEyLTRjZWYtYjg1NC1iNDZmMGMzNWNhZWQ=",
+          "_score" : 1.9924302,
+          "_source" : {
+            "@id" : "http://localhost/data/farms/1",
+            "@type" : "Barn",
+            "name" : "Number one"
+          }
+        }, {
+          "_index" : "pass",
+          "_type" : "_doc",
+          "_id" : "L2ZjcmVwby9yZXN0L2dyYW50cy81Mi83Zi85Ny81Zi81MjdmOTc1Zi03MmNlLTQzYjEtYjJmNC0yM2EwMDhlN2FmOWY=",
+          "_score" : 1.7917595,
+          "_source" : {
+            "@id" : "http://localhost/data/farms/2",
+            "@type" : "Barn",
+            "name" : "Number two"
+          }
+        }]
+      }
+    };
 
-        return [200, { "Content-Type": "application/ld+json" }, JSON.stringify(response)];
+    server = new Pretender(function() {
+      this.post('http://localhost:9200/_search', function() {
+        return [200, { "Content-Type": "application/ld+json" }, JSON.stringify(es_result)];
       });
     });
 

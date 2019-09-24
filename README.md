@@ -4,7 +4,7 @@
 
 ## Introduction
 
-This addon provides an adapter for interacting with the Fedora repository, http://fedorarepository.org/.
+This addon provides an adapter for interacting with the Fedora repository, http://fedorarepository.org/, and an Elasticsearch index of that data. The interaction is done through JSON-LD and the Fedora repository must have be modified in certain ways.
 
 ## Configuration
 
@@ -18,7 +18,6 @@ This addon provides an adapter for interacting with the Fedora repository, http:
 ### Serializer
 
 * contextURI: The URI of the external JSON-LD context to load. Must be publicly accessible.
-* dataURI: The URI use to make statements about PASS objects.
 
 ## Using the Fedora adapter
 
@@ -110,15 +109,10 @@ The adapter uses a container for each ember model to store instances of that mod
 By default, the container is baseURI/NAME where NAME is the pluralized form of the model name.
 These containers must exist for the adapter to work.
 
+## Requirements and limitations
 
-## Limitations
-
-The adapter requires @id and @type be used. It does not check the context for possible redefinition.
-
-The only context processing is expansion of compact IRIs for property names and type values.
-This expansion only happens if the context is included. The default behavior is for Fedora to
-rather verbosely include context. The adapter works best if Fedora is modified to return clean
-compact JSON-LD based on the model context.
+The adapter requires does not do JSON-LD processing. It requires that the JSON-LD be compact
+and only supports terms. The default Fedora behavior does not do this.
 
 The ember attribute type object (basic Javasript object) is not supported. The Fedora single
 subject restriction would make support a bit awkward. Note that JSON arrays of simple types
@@ -126,9 +120,7 @@ are suppoted with set.
 
 Ember attribute transforms are not supported.
 
-# Requirements on Fedora
-
-Fedora must support Json Merge Patch.
+Fedora must support JSON Merge Patch.
 
 ## Searching
 

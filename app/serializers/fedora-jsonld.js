@@ -1,11 +1,9 @@
 import DS from 'ember-data';
 import { classify } from '@ember/string';
 
-
-// Assumes compact JSON-LD representation without server triples.
+// Assumes compact JSON-LD representation without prefixes or server triples.
 // Required properties:
 //   contextURI: Location of external context for JSON-LD.
-//   dataURI: URI used for JSON-LD properties.
 
 export default DS.Serializer.extend({
   // Allowed set element types
@@ -67,15 +65,7 @@ export default DS.Serializer.extend({
        * In the case that 'string' payload is found, assume this redirection has occured and
        * throw an nicer error that can be caught in the Ember app
        */
-      // window.location.reload(true);
       throw new Error('shib302');
-    }
-    // Extract dataURI prefix if contained by inline @context
-    let context = payload['@context'];
-    let data_prefix = null;
-
-    if (context && typeof context == 'object') {
-      data_prefix = Object.keys(context).find(key => context[key] === this.get('dataURI'));
     }
 
     if ('@graph' in payload) {
@@ -83,14 +73,14 @@ export default DS.Serializer.extend({
 
       return {
         data: payload['@graph'].filter(n => '@type' in n).map(n =>
-          this.normalize(primaryModelClass, n, data_prefix)
+          this.normalize(primaryModelClass, n)
         )
       };
     } else if ('@id' in payload) {
       // Assume single object
 
       return {
-        data: this.normalize(primaryModelClass, payload, data_prefix)
+        data: this.normalize(primaryModelClass, payload)
       };
     } else {
       // Assume empty
@@ -271,17 +261,14 @@ export default DS.Serializer.extend({
 
  /**
     Normalize JSON-LD to internal representation. Assume that JSON-LD has been
-    compacted and terms are in the dataURI namespace. Compact IRIs are checked
-    to see if they are in the dataURI namespace. Full IRIs are not supported.
-
-    Context must either be passed in or present as hash['@context'].
+    compacted and only consists of terms.
 
     @method normalize
     @param {DS.Model} typeClass
     @param {Object} hash
     @return {Object}
   */
-  normalize(typeClass, hash, data_prefix = null) {
+  normalize(typeClass, hash) {
     //console.log('normalize')
     //console.log(hash);
 
@@ -290,29 +277,10 @@ export default DS.Serializer.extend({
     let attrs = {};
     let rels = {};
 
-    if (data_prefix) {
-      // Compact IRIs of dataURI are turned into terms.
-
-      // eslint-disable-next-line no-unused-vars
-      for (const [key, value] of Object.entries(hash)) {
-        let i = key.indexOf(':');
-
-        if (i != -1) {
-          let prefix = key.substring(0, i);
-          let newkey = key.substring(i + 1);
-
-          if (prefix === data_prefix) {
-            hash[newkey] = hash[key];
-          }
-        }
-      }
-    }
-
-    // Ensure that the expected @type is expected term or compact IRI.
+    // Ensure that the expected @type is present.
     let jsonld_type = this.serializeModelName(type);
 
-    if (!hash['@type'].includes(jsonld_type) &&
-        (!data_prefix || !hash['@type'].includes(data_prefix + ':' + jsonld_type))) {
+    if (!hash['@type'].includes(jsonld_type)) {
       throw new Error('Could not find expected JSON-LD type ' + jsonld_type + ' in: ' + hash['@type']);
     }
 
