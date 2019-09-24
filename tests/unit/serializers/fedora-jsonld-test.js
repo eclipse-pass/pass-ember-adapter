@@ -127,26 +127,24 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
   test('it serializes related cow and barn', function(assert) {
     let store = this.owner.lookup('service:store');
 
-    let barn_data = {
-      name: 'moo-thru'
-    };
-
-    let cow_data = {
+    let cow_record = run(() => store.createRecord('cow', {
+      id: 'cow:1',
       name: 'icecream',
       weight: 890,
-      birthDate: new Date()
-    };
+    }));
 
-    let cow_record = run(() => store.createRecord('cow', cow_data));
-    let barn_record = run(() => store.createRecord('barn', barn_data));
+    let barn_record = run(() => store.createRecord('barn', {
+      id: 'barn:1',
+      name: 'moo-thru'
+    }));
 
     let cow_expected = {
       '@context': ENV.test.context,
-      '@id': '',
+      '@id': 'cow:1',
       '@type': 'Cow',
-      name: cow_data.name,
-      weight: cow_data.weight,
-      birthDate: cow_data.birthDate.toISOString(),
+      name: 'icecream',
+      weight: 890,
+      birthDate: null,
       healthy: null,
       milkVolume: null,
       colors: null,
@@ -157,9 +155,9 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
 
     let barn_expected = {
       '@context': ENV.test.context,
-      '@id': '',
+      '@id': 'barn:1',
       '@type': 'Barn',
-      name: barn_data.name,
+      name: 'moo-thru',
       cows: null,
       colors: null
     };
@@ -172,32 +170,20 @@ module('Unit | Serializer | fedora-jsonld', function(hooks) {
     // Set relationships and test serialization again.
 
     run(() => {
-      cow_record.set('id', 'cow:34');
-      barn_record.set('id', 'barn:10');
-
       // Also try setting a hidden relationship which should be ignored
       cow_record.set('_has_bff', cow_record);
 
       cow_record.set('barn', barn_record);
       barn_record.get('cows').pushObject(cow_record);
-
-      cow_expected['@id'] = cow_record.get('id');
-      barn_expected['@id'] = barn_record.get('id');
-      cow_expected.barn = barn_record.get('id');
-      barn_expected.cows = [cow_record.get('id')];
-
-      cow_result = cow_record.serialize();
-      barn_result = barn_record.serialize();
-
-      assert.deepEqual(cow_result, cow_expected);
-
-      // For some reason the serializer will always see the cows array as [null].
-      // This did not used to be the case. Since the ITs still pass, perhaps the
-      // problem is the records not being saved.
-      // TODO For the moment just ignore the issue.
-      barn_expected.cows = [null];
-
-      assert.deepEqual(barn_result, barn_expected);
     });
+
+    cow_expected.barn = barn_record.get('id');
+    barn_expected.cows = [cow_record.get('id')];
+
+    cow_result = cow_record.serialize();
+    barn_result = barn_record.serialize();
+
+    assert.deepEqual(cow_result, cow_expected);
+    assert.deepEqual(barn_result, barn_expected);
   });
 });
