@@ -37,11 +37,6 @@ matrix:
 
 before_install:
   - npm config set spin false
-  - npm install -g npm@4
-  - npm --version
-
-# install:
-#   - npm install
 
 before_script:
   - docker-compose pull
