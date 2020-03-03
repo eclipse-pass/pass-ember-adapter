@@ -63,7 +63,7 @@ export default DS.Model.extend({
   weight: DS.attr('number'),
   healthy: DS.attr('boolean'),
   birthDate: DS.attr('date'),
-  colors: DS.attr('set'),  
+  colors: DS.attr('set'),
   milkVolume: DS.attr('number'),
   barn: DS.belongsTo('barn')
 });
@@ -86,15 +86,15 @@ Example JSON-LD context:
     "xsd": "http://www.w3.org/2001/XMLSchema#",
 
     "Cow": "farm:Cow",
-    "Barn": "farm:Barn",    
+    "Barn": "farm:Barn",
 
     "healthy": {"@id": "farm:healthy"},
     "birthDate": {"@id": "farm:birthDate", "@type": "xsd:dateTime"},
     "name": {"@id": "farm:name"},
-    "milkVolume": {"@id": "farm:milkVolume", "@type": "xsd:double"},    
+    "milkVolume": {"@id": "farm:milkVolume", "@type": "xsd:double"},
     "weight": {"@id": "farm:weight", "@type": "xsd:integer"},
     "barn": {"@id": "farm:barn", "@type": "@id"},
-    "colors": {"@id": "farm:colors", "@container": "@set"}    
+    "colors": {"@id": "farm:colors", "@container": "@set"}
     "cows": {"@id": "farm:cows", "@container": "@set", "@type": "@id"}
   }
 }
@@ -165,6 +165,7 @@ This is equivalent to the following query using the expanded syntax:
 store.query('barn', {query: {term: {colors : 'green'}}, from: 10, size: 10, info: info});
 ```
 
+## Building
 
 ## Installation
 
