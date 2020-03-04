@@ -22,20 +22,37 @@ env:
   global:
     # See https://git.io/vdao3 for details.
     - JOBS=1
-  matrix:
-    # we recommend new addons test the current and previous LTS
-    # as well as latest stable release (bonus points to beta/canary)
-    - EMBER_TRY_SCENARIO=ember-lts-2.18
-    - EMBER_TRY_SCENARIO=ember-lts-3.4
-    - EMBER_TRY_SCENARIO=ember-release
-    - EMBER_TRY_SCENARIO=ember-beta
-    - EMBER_TRY_SCENARIO=ember-canary
-    - EMBER_TRY_SCENARIO=ember-default
 
 matrix:
   fast_finish: true
   allow_failures:
     - env: EMBER_TRY_SCENARIO=ember-canary
+  include:
+    # runs linting and tests with current locked deps
+    - stage: "Tests"
+      name: "Tests"
+      script:
+        - npm run lint:hbs
+        - npm run lint:js
+        - npm test
+
+    - stage: "Additional Tests"
+      name: "Floating Dependencies"
+      install:
+        - npm install --no-package-lock
+      script:
+        - npm test
+
+    # we recommend new addons test the current and previous LTS
+    # as well as latest stable release (bonus points to beta/canary)
+    - env: EMBER_TRY_SCENARIO=ember-lts-3.8
+    - env: EMBER_TRY_SCENARIO=ember-lts-3.12
+    - env: EMBER_TRY_SCENARIO=ember-release
+    - env: EMBER_TRY_SCENARIO=ember-beta
+    - env: EMBER_TRY_SCENARIO=ember-canary
+    - env: EMBER_TRY_SCENARIO=ember-default-with-jquery
+    - env: EMBER_TRY_SCENARIO=ember-classic
+
 
 before_install:
   - npm config set spin false
@@ -44,9 +61,6 @@ before_script:
   - docker-compose pull
   - docker-compose up -d
   - bash .wait.sh
-
-before_install:
-  - npm config set spin false
 
 script:
   # Usually, it's ok to finish the test scenario without reverting
