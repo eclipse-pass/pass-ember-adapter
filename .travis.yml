@@ -1,7 +1,9 @@
 ---
 language: node_js
 node_js:
-  - "10"
+  # we recommend testing addons with the same minimum supported node version as Ember CLI
+  # so that your addon works for all apps
+  - "6"
 
 sudo: false
 dist: trusty
@@ -42,6 +44,11 @@ before_script:
   - docker-compose pull
   - docker-compose up -d
   - bash .wait.sh
+
+before_install:
+  - npm config set spin false
+  - npm install -g npm@4
+  - npm --version
 
 script:
   # Usually, it's ok to finish the test scenario without reverting
