@@ -22,34 +22,34 @@ env:
   global:
     # See https://git.io/vdao3 for details.
     - JOBS=1
-  matrix:
-    # we recommend new addons test the current and previous LTS
-    # as well as latest stable release (bonus points to beta/canary)
-    - EMBER_TRY_SCENARIO=ember-lts-3.8
-    - EMBER_TRY_SCENARIO=ember-lts-3.12
-    - EMBER_TRY_SCENARIO=ember-release
-    - EMBER_TRY_SCENARIO=ember-beta
-    - EMBER_TRY_SCENARIO=ember-canary
-    - EMBER_TRY_SCENARIO=ember-default-with-jquery
-    - EMBER_TRY_SCENARIO=ember-classic
+  # we recommend new addons test the current and previous LTS
+  # as well as latest stable release (bonus points to beta/canary)
+  - EMBER_TRY_SCENARIO=ember-lts-3.8
+  - EMBER_TRY_SCENARIO=ember-lts-3.12
+  - EMBER_TRY_SCENARIO=ember-release
+  - EMBER_TRY_SCENARIO=ember-beta
+  - EMBER_TRY_SCENARIO=ember-canary
+  - EMBER_TRY_SCENARIO=ember-default-with-jquery
+  - EMBER_TRY_SCENARIO=ember-classic
 
 matrix:
   fast_finish: true
   allow_failures:
     - env: EMBER_TRY_SCENARIO=ember-canary
-  include:
-    # runs linting and tests with current locked deps
-    - stage: "Tests"
-      name: "Tests"
-      script:
-        - npm test
+  # The below jobs just seem redundant to me, given the above 
+  # include:
+  #   # runs linting and tests with current locked deps
+  #   - stage: "Tests"
+  #     name: "Tests"
+  #     script:
+  #       - npm test
 
-    - stage: "Additional Tests"
-      name: "Floating Dependencies"
-      install:
-        - npm install --no-package-lock
-      script:
-        - npm test
+  #   - stage: "Additional Tests"
+  #     name: "Floating Dependencies"
+  #     install:
+  #       - npm install --no-package-lock
+  #     script:
+  #       - npm test
 
 before_install:
   - npm config set spin false
