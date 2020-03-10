@@ -22,6 +22,16 @@ env:
   global:
     # See https://git.io/vdao3 for details.
     - JOBS=1
+  matrix:
+    # we recommend new addons test the current and previous LTS
+    # as well as latest stable release (bonus points to beta/canary)
+    - EMBER_TRY_SCENARIO=ember-lts-3.8
+    - EMBER_TRY_SCENARIO=ember-lts-3.12
+    - EMBER_TRY_SCENARIO=ember-release
+    - EMBER_TRY_SCENARIO=ember-beta
+    - EMBER_TRY_SCENARIO=ember-canary
+    - EMBER_TRY_SCENARIO=ember-default-with-jquery
+    - EMBER_TRY_SCENARIO=ember-classic
 
 matrix:
   fast_finish: true
@@ -40,17 +50,6 @@ matrix:
         - npm install --no-package-lock
       script:
         - npm test
-
-    # we recommend new addons test the current and previous LTS
-    # as well as latest stable release (bonus points to beta/canary)
-    - env: EMBER_TRY_SCENARIO=ember-lts-3.8
-    - env: EMBER_TRY_SCENARIO=ember-lts-3.12
-    - env: EMBER_TRY_SCENARIO=ember-release
-    - env: EMBER_TRY_SCENARIO=ember-beta
-    - env: EMBER_TRY_SCENARIO=ember-canary
-    - env: EMBER_TRY_SCENARIO=ember-default-with-jquery
-    - env: EMBER_TRY_SCENARIO=ember-classic
-
 
 before_install:
   - npm config set spin false
