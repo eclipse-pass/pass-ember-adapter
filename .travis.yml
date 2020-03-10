@@ -43,7 +43,6 @@ matrix:
   #     name: "Tests"
   #     script:
   #       - npm test
-
   #   - stage: "Additional Tests"
   #     name: "Floating Dependencies"
   #     install:
