@@ -6,7 +6,8 @@
 
 This addon provides an adapter for interacting with the Fedora repository, http://fedorarepository.org/, and an Elasticsearch index of that data. The interaction is done through JSON-LD and the Fedora repository must have be modified in certain ways.
 
-## Configuration
+* Ember.js v3.8 or above
+* Ember CLI v2.13 or above
 
 ### Adapter
 
