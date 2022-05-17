@@ -1,0 +1,19 @@
+name: Run Integration Tests
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *' # daily, at 3am
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 12.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Run integration tests
+        run: echo "Project does not have integration tests"
