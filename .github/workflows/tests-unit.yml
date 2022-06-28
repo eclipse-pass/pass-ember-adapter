@@ -4,20 +4,40 @@ on:
 
 jobs:
   build:
+    timeout-minutes: 25
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Pull
+        run: docker-compose pull
+
+      - name: Start containers
+        run: docker-compose up -d
+
+      - name: Wait till ES ready
+        run: bash .wait.sh
+        
       - name: Install Node
         uses: actions/setup-node@v2
         with:
-          node-version: 12.x
-          cache: npm
+          node-version: lts/*
+          cache: 'npm'
           cache-dependency-path: package-lock.json
+              
       - name: Build project
         run: npm install
+        
       - name: Run NPM unit tests
         run: npm test
-      - name: Run Ember Core Tests
-        run: ./node_modules/ember-cli/bin/ember test
-      - name: Run Ember Server tests
-        run: ./node_modules/ember-cli/bin/ember test --server
+        
+#      - name: Run Ember Core Tests
+#        run: ./node_modules/ember-cli/bin/ember test
+        
+#      - name: Run Ember Server tests
+#        run: ./node_modules/ember-cli/bin/ember test --server
+        
+      - name: Stop containers
+        if: always()
+        run: docker-compose -f "docker-compose.yml" down
