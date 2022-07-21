@@ -1,5 +1,5 @@
 {
-  "name": "ember-fedora-adapter",
+  "name": "pass-ember-adapter",
   "version": "0.1.0",
   "description": "Adapter for the Fedora repository.",
   "keywords": [
